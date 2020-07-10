@@ -10,6 +10,7 @@ from datetime import datetime
 import pandas as pd
 import sys
 import time
+import cv2
 
 
 def create_quality_control_images(results_folder_path: str, basename: str, map_of_images: dict):
