@@ -32,7 +32,8 @@ The tool pyPOCQuant aims to automatically detect and quantify signal bands from 
 2. Prepare a settings file
 3. Run the pipeline
 
-### 1. Split images by strip manufacturer <a name="splitimages"></a>
+### Split images by strip manufacturer <a name="splitimages"></a>
+
 If you have many images in an unorganized way we have a helper script to sort them by manufacturer into subfolders.
 
 ```python
@@ -59,7 +60,7 @@ $ python ./split_images_by_strip_type_parallel.py -f /PATH/TO/INPUT/FOLDER -o /P
 
 
 
-### 2. Settings file preparation <a name="settingsprep"></a>
+### Settings file preparation <a name="settingsprep"></a>
 
 #### How to determine the parameters manually <a name="settingsprepm"></a>
 
@@ -93,8 +94,7 @@ Use the user interface which will automatically generate the settings file for y
 * Test the parameters by clicking the `test parameters` button (3). And adjust the polygons or the parameters  if needed.
 * Save the settings file (Ctrl+S, `File`->`Save settings file`)
 
-
-### 3. Run the pipeline <a name="runpipline"></a>
+### Run the pipeline <a name="runpipline"></a>
 
 #### Run the analysis per manufacturer manually <a name="runpiplinem"></a>
 
