@@ -3,8 +3,8 @@ from pipeline_FH import run_FH
 from pathlib import Path
 import sys
 
-from lib.settings import load_settings, save_settings
-from lib.utils import set_tesseract_exe
+from pypocquant.lib.settings import load_settings, save_settings
+from pypocquant.lib.utils import set_tesseract_exe
 
 __exe__ = "pyPOCQuant"
 __version__ = "0.1.0"

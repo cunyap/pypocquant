@@ -9,16 +9,16 @@ import pandas as pd
 import rawpy
 from tqdm import tqdm
 
-from lib.analysis import extract_inverted_sensor, analyze_measurement_window, \
+from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement_window, \
     extract_rotated_strip_from_box, get_sensor_contour_fh, use_ocr_to_rotate_strip_if_needed, \
     read_patient_data_by_ocr, use_hough_transform_to_rotate_strip_if_needed
-from lib.barcode import rotate_if_needed_fh, find_strip_box_from_barcode_data_fh, \
+from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barcode_data_fh, \
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
     align_box_with_image_border_fh
-from lib.consts import Issue
-from lib.processing import BGR2Gray
-from lib.settings import save_settings
-from lib.utils import get_iso_date_from_image, get_exif_details, create_quality_control_images
+from pypocquant.lib.consts import Issue
+from pypocquant.lib.processing import BGR2Gray
+from pypocquant.lib.settings import save_settings
+from pypocquant.lib.utils import get_iso_date_from_image, get_exif_details, create_quality_control_images
 
 plt.switch_backend('qt5agg')
 
