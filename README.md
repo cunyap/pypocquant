@@ -38,10 +38,10 @@ First read the manual [MANUAL](manual/UserInstructions.md)
    git clone https://git.bsse.ethz.ch/cunya/pypocquant.git
    ```
 
-3.  Install the library
+4. Navigate into the `pypocquant` and run the scripts as described in the manual. i.e.
 
-   ```python
-   pip install -e .
+   ```
+   python pyPOCQuant_FH.py -f D:\Large_Study\COVID_19_POCT\Camera1\100CANON\sorted\SUREBIOTECH -s config\config_FH_SUREBIOTECH_camera1.conf -w 10
    ```
 
-4.  Run the scripts as described in the manual.
+   
