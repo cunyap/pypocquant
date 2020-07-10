@@ -322,6 +322,9 @@ Raw image here just shown as comparison:
 * `IMAGE_FILE_NAME_strip_gray_aligned_after_ocr` Aligned POCT cropped around its outline such that it is parallel to the bottom side after OCR filtering such that the pipetting part is always left (for the cases where the POCT was not placed in the correct orientation in the template.)
 <img src="IMG_8489_JPG_strip_gray_aligned_after_ocr.png" style="zoom:35%;" />
 
+* `IMAGE_FILE_NAME_strip_gray_hough_analysis.png` Aligned POCT cropped around its outline such that it is parallel to the bottom side detecting the pipetting spot to identify wrongly oriented POCT in the strip box. The rectangles indicate the search areas while as the circles indicate potential hits for the pipetting spot. Red rectangle and magenta circles identifies the side where the pipetting spot was detected. Note it is assumed that the control band is always opposite of the pipetting area.
+<img src="IMG_8489_JPG_strip_gray_hough_analysis.png" style="zoom:35%;" />
+
 * `IMAGE_FILE_NAME_sensor`: Aligned sensor crop showing the bands.
 <img src="IMG_8489_JPG_sensor.png" style="zoom:100%;" />
 
