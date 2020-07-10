@@ -16,9 +16,9 @@ from scipy.spatial.distance import cdist
 from skimage import filters
 from sklearn.linear_model import HuberRegressor
 
-from pyPOCQuant import consts
-from pyPOCQuant.barcode import rotate
-from pyPOCQuant.processing import BGR2Gray
+from pypocquant.lib import consts
+from pypocquant.lib.barcode import rotate
+from pypocquant.lib.processing import BGR2Gray
 
 
 def analyze_test_area(gray, results_folder_path, basename, low_thres_boundary=190, bar_prominence=5,

@@ -1,8 +1,8 @@
 from pathlib import Path
 import cv2
 
-from pyPOCQuant.processing import BGR2Gray
-from pyPOCQuant.utils import get_templates_folder
+from pypocquant.lib.processing import BGR2Gray
+from pypocquant.lib.utils import get_templates_folder
 
 
 def load_templates_orig(scaled_size=(237, 837)):

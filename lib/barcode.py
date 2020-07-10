@@ -12,8 +12,8 @@ import math
 import re
 from typing import Union
 
-from pyPOCQuant.processing import BGR2Gray
-from pyPOCQuant.consts import SymbolTypes
+from pypocquant.lib.processing import BGR2Gray
+from pypocquant.lib.consts import SymbolTypes
 
 
 class Barcode(object):
