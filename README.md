@@ -35,7 +35,7 @@ First read the manual [MANUAL](manual/UserInstructions.md)
 2. Clone this repo:
 
    ```bash
-   https://git.bsse.ethz.ch/cunya/pypocquant.git
+   git clone https://git.bsse.ethz.ch/cunya/pypocquant.git
    ```
 
 3.  Install the library
