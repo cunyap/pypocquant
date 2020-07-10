@@ -12,6 +12,14 @@ import sys
 import time
 
 
+def create_quality_control_images(results_folder_path: str, basename: str, map_of_images: dict):
+    """Save the list of requested quality control images."""
+
+    for key in map_of_images:
+        if map_of_images[key] is None:
+            continue
+        cv2.imwrite(str(results_folder_path / Path(basename + "_" + key + ".png")), map_of_images[key])
+		
 def get_project_root() -> Path:
     """Returns project root folder."""
     try:
