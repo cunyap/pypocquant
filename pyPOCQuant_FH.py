@@ -1,8 +1,11 @@
+import os, sys
+sys.path += [os.path.abspath('..')]
+
 import argparse
-from pipeline_FH import run_FH
 from pathlib import Path
 import sys
 
+from pypocquant.pipeline_FH import run_FH
 from pypocquant.lib.settings import load_settings, save_settings
 from pypocquant.lib.utils import set_tesseract_exe
 
