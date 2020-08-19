@@ -143,7 +143,7 @@ if __name__ == '__main__':
     settings = load_settings(settings_file)
 
     # Make sure that the settings file is usable
-    if DEFAULT_PARAMETERS.keys() <= set(settings.keys()):
+    if DEFAULT_PARAMETERS.keys() != settings.keys():
         print(f"The settings file {settings_file} is not valid.")
         sys.exit(1)
 
