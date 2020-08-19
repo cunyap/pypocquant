@@ -260,6 +260,9 @@ def run(
         "ctl": 0,
         "igm": 0,
         "igg": 0,
+        "ctl_abs": 0,
+        "igm_abs": 0,
+        "igg_abs": 0,
         "ctl_ratio": 0,
         "igm_ratio": 0,
         "igg_ratio": 0,
@@ -571,6 +574,7 @@ def run(
         # add flag the issue in the result row.
         if "ctl" in window_results:
             results_row["ctl"] = 1
+            results_row["ctl_abs"] = window_results["ctl"]["signal"]
             results_row["ctl_ratio"] = window_results["ctl"]["normalized_signal"]
 
             # Inform
@@ -585,10 +589,12 @@ def run(
 
         if "igg" in window_results:
             results_row["igg"] = 1
+            results_row["igg_abs"] = window_results["igg"]["signal"]
             results_row["igg_ratio"] = window_results["igg"]["normalized_signal"]
 
         if "igm" in window_results:
             results_row["igm"] = 1
+            results_row["igm_abs"] = window_results["igm"]["signal"]
             results_row["igm_ratio"] = window_results["igm"]["normalized_signal"]
 
     else:
