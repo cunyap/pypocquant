@@ -16,4 +16,7 @@ def save_settings(settings_dictionary, filename):
     """Save settings from a dictionary to file."""
     with open(filename, "w+") as f:
         for key in settings_dictionary:
-            f.write(f"{key}={settings_dictionary[key]}\n")
+            if type(settings_dictionary[key]) == str:
+                f.write(f"{key}='{settings_dictionary[key]}'\n")
+            else:
+                f.write(f"{key}={settings_dictionary[key]}\n")
