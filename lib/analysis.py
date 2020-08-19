@@ -1713,7 +1713,7 @@ def use_ocr_to_rotate_strip_if_needed(img_gray, img=None, text="COVID", on_right
 
         # Search for the text
         results = pytesseract.image_to_data(rotated_img_gray, output_type=Output.DICT)
-        n_boxes = len(results['level'])
+        n_boxes = len(results['text'])
         for i in range(n_boxes):
             if text.upper() in results['text'][i].upper():
 
