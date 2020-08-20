@@ -102,6 +102,7 @@ def run_FH(
 
     :param min_sensor_score: float
         Minimum segmentation score for the sensor to be considered peak analysis (0.0 <= min_sensor_score <= 1.0).
+        **This is currently ignored.**
 
     :param qr_code_border: int
         Lateral and vertical extension of the (white) border around each QR code.
@@ -176,7 +177,6 @@ def run_FH(
             "raw_auto_wb": raw_auto_wb,
             "strip_text_to_search": strip_text_to_search,
             "strip_text_on_right": strip_text_on_right,
-            "min_sensor_score": min_sensor_score,
             "qr_code_border": qr_code_border,
             "perform_sensor_search": perform_sensor_search,
             "sensor_size": sensor_size,
@@ -187,8 +187,7 @@ def run_FH(
             "peak_expected_relative_location": peak_expected_relative_location,
             "subtract_background": subtract_background,
             "verbose": verbose,
-            "qc": qc,
-            "file_version": 1
+            "qc": qc
         },
         str(results_folder_path / "settings.txt")
     )

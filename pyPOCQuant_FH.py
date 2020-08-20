@@ -77,7 +77,6 @@ if __name__ == '__main__':
         "strip_text_to_search": "COVID",
         "strip_text_on_right": True,
         "strip_size": None,
-        "min_sensor_score": 0.85,
         "qr_code_border": 40,
         "sensor_size": (61, 249),
         "sensor_center": (178, 667),
@@ -89,7 +88,6 @@ if __name__ == '__main__':
         "peak_expected_relative_location": (0.25, 0.53, 0.79),
         "verbose": True,
         "qc": True,
-        "file_version": 1,
         "max_workers": None
     }
 
@@ -164,7 +162,6 @@ if __name__ == '__main__':
     print(f"        RAW apply auto white balance: {settings['raw_auto_wb']}")
     print(f"  Strip text to search (orientation): {settings['strip_text_to_search']}")
     print(f"          Strip text is on the right: {settings['strip_text_on_right']}")
-    print(f"                           Min score: {settings['min_sensor_score']:.2f}")
     print(f"                      QR code border: {settings['qr_code_border']}")
     print(f"               Perform sensor search: {settings['perform_sensor_search']}")
     print(f"                         Sensor size: {settings['sensor_size']}")
