@@ -16,6 +16,7 @@ from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barc
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
     align_box_with_image_border_fh
 from pypocquant.lib.consts import Issue
+from pypocquant.lib.io import load_and_process_image
 from pypocquant.lib.processing import BGR2Gray
 from pypocquant.lib.settings import save_settings
 from pypocquant.lib.utils import get_iso_date_from_image, get_exif_details, create_quality_control_images
@@ -223,22 +224,8 @@ def run(
     image_log.append(f"File = {filename}")
 
     # Load  the image
-    if filename.lower().endswith(".jpg") or filename.lower().endswith(".jpeg"):
-        image = cv2.imread(str(input_folder_path / filename))
-    elif filename.lower().endswith(".nef") or \
-            filename.lower().endswith(".cr2") or \
-            filename.lower().endswith(".arw"):
-        with rawpy.imread(str(input_folder_path / filename)) as raw:
-            image = raw.postprocess(
-                no_auto_bright=not raw_auto_stretch,
-                use_auto_wb=raw_auto_wb,
-                use_camera_wb=False,
-                gamma=(1, 1),
-                output_bps=8)
-
-            # Swap channels to BGR to be opencv compatible
-            image = image[:, :, [0, 1, 2]] = image[:, :, [2, 1, 0]]
-    else:
+    image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch, raw_auto_wb)
+    if image is None:
         return {}, image_log
 
     # Initialize results to to add to the dataframe

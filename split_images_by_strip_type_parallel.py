@@ -13,6 +13,8 @@ from lib.analysis import read_patient_data_by_ocr
 from lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, rotate_if_needed_fh, \
     find_strip_box_from_barcode_data_fh
 
+from pypocquant.lib.io import load_and_process_image
+
 
 def run_pool(files, output_folder_path, undefined_path, max_workers=4):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -23,22 +25,8 @@ def run_pool(files, output_folder_path, undefined_path, max_workers=4):
 def run(filename, output_folder_path, undefined_path):
 
     # Load  the image
-    if filename.lower().endswith(".jpg") or filename.lower().endswith(".jpeg"):
-        image = cv2.imread(str(input_folder_path / filename))
-    elif filename.lower().endswith(".nef") or \
-            filename.lower().endswith(".cr2") or \
-            filename.lower().endswith(".arw"):
-        with rawpy.imread(str(input_folder_path / filename)) as raw:
-            image = raw.postprocess(
-                no_auto_bright=True,
-                use_auto_wb=False,
-                use_camera_wb=False,
-                gamma=(1, 1),
-                output_bps=8)
-
-            # Swap channels to BGR to be opencv compatible
-            image = image[:, :, [0, 1, 2]] = image[:, :, [2, 1, 0]]
-    else:
+    image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch=False, raw_auto_wb=False)
+    if image is None:
         return
 
     # Find the location of the barcodes
