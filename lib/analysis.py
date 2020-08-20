@@ -1821,7 +1821,7 @@ def read_patient_data_by_ocr(
             continue
 
         # Examine the results
-        n_boxes = len(results['level'])
+        n_boxes = len(results['text'])
         for i in range(n_boxes):
             current_text = results['text'][i].upper()
             if current_text != "":
