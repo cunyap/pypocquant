@@ -1694,8 +1694,8 @@ def use_ocr_to_rotate_strip_if_needed(img_gray, img=None, text="COVID", on_right
 
     rotated = False
 
-    # If text is "", do nothing
-    if text == "":
+    # If text is "", do nothing. For robustness, also check against '""'.
+    if text == "" or text == '""':
         return img_gray, img, rotated
 
     # Try with the following orientations

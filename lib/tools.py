@@ -1,15 +1,28 @@
-from pypocquant.lib.analysis import extract_rotated_strip_from_box, use_hough_transform_to_rotate_strip_if_needed
+from pypocquant.lib.analysis import extract_rotated_strip_from_box, use_hough_transform_to_rotate_strip_if_needed, \
+    use_ocr_to_rotate_strip_if_needed
 from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, rotate_if_needed_fh, \
     align_box_with_image_border_fh, find_strip_box_from_barcode_data_fh
 from pypocquant.lib.processing import BGR2Gray
 
 
-def extract_strip(image, qr_code_border):
+def extract_strip(image, qr_code_border, strip_text_to_search="", strip_text_on_right=True):
     """Attempts to extract the strip from the original image.
-    @param image: RGB image.
-    @param qr_code_border: extension of the white border around the QR code.
+    :param image: numpy array
+        RGB image to be processed.
 
-    @return (strip, error_msg): Tuple
+    :param qr_code_border: int
+        Lateral and vertical extension of the (white) border around each QR code.
+
+    :param strip_text_to_search: str
+        Text to search on the strip to assess orientation. Set to "" to skip.
+
+    :param strip_text_on_right: bool
+        Assuming the strip is oriented horizontally, whether the 'strip_text_to_search' text
+        is assumed to be on the right. If 'strip_text_on_right' is True and the text is found on the
+        left hand-side of the strip, the strip will be rotated 180 degrees. Ignored if
+        strip_text_to_search is "".
+
+    :return (strip, error_msg): Tuple
         strip: Strip image (RGB) or None if extraction fails.
         error_msg: If strip is None, the cause of failure will be stored in error_message.
     """
@@ -85,6 +98,15 @@ def extract_strip(image, qr_code_border):
             strip_gray_for_analysis,
             strip_for_analysis,
             qc=False
+        )
+
+    # Use tesseract to find expected text from the strip.
+    _, strip_for_analysis, _ = \
+        use_ocr_to_rotate_strip_if_needed(
+            strip_gray_for_analysis,
+            strip_for_analysis,
+            strip_text_to_search,
+            strip_text_on_right
         )
 
     return strip_for_analysis, ""
