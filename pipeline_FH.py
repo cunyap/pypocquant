@@ -464,7 +464,8 @@ def run(
         str(results_folder_path),
         filename.replace('.', '_'),
         {
-            "strip_gray_hough_analysis": qc_image
+            "strip_gray_hough_analysis_candidates": qc_image,
+            "strip_gray_hough_analysis": strip_gray_for_analysis
         }
     )
 
