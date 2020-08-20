@@ -93,7 +93,7 @@ def extract_strip(image, qr_code_border, strip_text_to_search="", strip_text_on_
 
     # Use the Hough transform to look for expected details in the
     # strip.
-    _, strip_for_analysis, _, _ = \
+    strip_gray_for_analysis, strip_for_analysis, _, _ = \
         use_hough_transform_to_rotate_strip_if_needed(
             strip_gray_for_analysis,
             strip_for_analysis,
@@ -101,7 +101,7 @@ def extract_strip(image, qr_code_border, strip_text_to_search="", strip_text_on_
         )
 
     # Use tesseract to find expected text from the strip.
-    _, strip_for_analysis, _ = \
+    strip_gray_for_analysis, strip_for_analysis, _ = \
         use_ocr_to_rotate_strip_if_needed(
             strip_gray_for_analysis,
             strip_for_analysis,
