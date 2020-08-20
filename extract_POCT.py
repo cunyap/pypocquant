@@ -50,21 +50,35 @@ if __name__ == '__main__':
         '--border',
         default=40,
         type=int,
-        help="Extension of the white border of the QR codes."
+        help="extension of the white border of the QR codes."
     )
 
     parser.add_argument(
         '-r',
         '--raw_auto_stretch',
         action='store_true',
-        help="Apply auto-stretch of intensities for RAW images (only)."
+        help="apply auto-stretch of intensities for RAW images (only)."
     )
 
     parser.add_argument(
         '-w',
         '--raw_auto_wb',
         action='store_true',
-        help="Apply auto white-balancing for RAW images (only)."
+        help="apply auto white-balancing for RAW images (only)."
+    )
+
+    parser.add_argument(
+        '-t',
+        '--text_to_search',
+        default='',
+        help="text to search on the strip."
+    )
+
+    parser.add_argument(
+        '-g',
+        '--text_on_right',
+        action='store_true',
+        help="whether the text to search on the strip should be on the right."
     )
 
     # Parse the arguments
@@ -76,6 +90,8 @@ if __name__ == '__main__':
     qr_code_border = args["border"]
     raw_auto_stretch = args["raw_auto_stretch"]
     raw_auto_wb = args["raw_auto_wb"]
+    strip_text_to_search = args["text_to_search"]
+    strip_text_on_right = args["text_on_right"]
 
     # Check that the input file exists
     if not Path(filename).is_file():
@@ -86,7 +102,7 @@ if __name__ == '__main__':
     image = load_and_process_image(filename, raw_auto_stretch, raw_auto_wb)
 
     # Run the extraction
-    strip_image, error_msg = extract_strip(image, qr_code_border)
+    strip_image, error_msg = extract_strip(image, qr_code_border, strip_text_to_search, strip_text_on_right)
 
     if strip_image is None:
         print(f"Sorry, extraction failed. {error_msg}.")
