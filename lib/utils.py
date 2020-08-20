@@ -13,14 +13,46 @@ import time
 import cv2
 
 
-def create_quality_control_images(results_folder_path: str, basename: str, map_of_images: dict):
-    """Save the list of requested quality control images."""
+def create_quality_control_images(
+        results_folder_path: str,
+        basename: str,
+        map_of_images: dict,
+        extension: str = ".png",
+        quality: int = 100):
+    """Save the list of requested quality control images.
+    :type results_folder_path: str
+        Full path to the folder where to save the quality control images.
+    :param basename: str
+        Common base name for all quality control images.
+    :param map_of_images: dict
+        Dictionary of keys to be appended to the base name with the corresponding image as value.
+    :param extension: str
+        File extension (format). Optional, default is .png.
+    :param quality: int
+        Image compression quality. Optional, default is 100. This is only considered if format is ".jpg".
+    """
+
+    # Check the format
+    extension = extension.lower()
+
+    if extension[0] != '.':
+        extension = '.' + extension
+
+    if extension == '.jpg':
+        if quality < 0 or quality > 100:
+            quality = 100
 
     for key in map_of_images:
         if map_of_images[key] is None:
             continue
-        cv2.imwrite(str(results_folder_path / Path(basename + "_" + key + ".png")), map_of_images[key])
-		
+        out_filename = str(results_folder_path / Path(basename + "_" + key + extension))
+
+        if extension == '.jpg':
+            cv2.imwrite(out_filename, map_of_images[key], [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+        else:
+            cv2.imwrite(out_filename, map_of_images[key])
+
+
 def get_project_root() -> Path:
     """Returns project root folder."""
     try:

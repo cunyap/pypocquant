@@ -313,7 +313,9 @@ def run(
             filename.replace('.', '_'),
             {
                 "rotated": image
-            }
+            },
+            extension=".jpg",
+            quality=85
         )
 
     # If the image was rotated, we need to find the location of the barcodes again.
@@ -361,7 +363,9 @@ def run(
             filename.replace('.', '_'),
             {
                 "aligned_box": image
-            }
+            },
+            extension=".jpg",
+            quality=85
         )
 
     # Find location of the strip box from the barcode data
@@ -387,7 +391,9 @@ def run(
             filename.replace('.', '_'),
             {
                 "box": qc_image
-            }
+            },
+            extension=".jpg",
+            quality=85
         )
     # If we could not find a valid FID, we try to run OCR in a region
     # a bit larger than the box (in y direction).
