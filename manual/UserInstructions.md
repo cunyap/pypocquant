@@ -3,38 +3,52 @@
 ## Table of contents
 
 1. [Introduction](#introduction)
-2. [Quick start](#quickstart)
+2. [Command line workflow](#command_line_workflow)
    2.1. [Split images by strip manufacturer](#splitimages)
    2.2. [Settings file preparation](#settingsprep)
-    	2.2.1.[How to determine the parameters manually](#settingsprepm)
-    	2.2.2 [How to determine the parameters automatically using the GUI](#settingsprepa)
+    	2.2.1. [How to determine the parameters manually](#settingsprepm)
    2.3. [Run pipeline](#runpipeline)
    	2.3.1. [Run the analysis per manufacturer manually](#runpipelinem)
-    	2.3.2. [Run the analysis per manufacturer automatically using the GUI](#runpipelineg)
-3. [Settings file](settingsfile)
-   3.1 [Explanations](#settingsfilee)
-4. [Description of results](#resultsdescription)
-   4.1. [Result table](#resulttable)
-   4.2. [Quality control images](#resultimages)
-   4.3. [Log file](#resultlog)
-   4.4. [Settings file](#resultsettings)
-5. [Graphical user interface (GUI)](#gui)
-
-
+3. [GUI workflow](#gui_workflow)
+   3.1. [Split images by strip manufacturer](#splitimages)
+   3.2. [Settings file preparation](#settingsprep)
+    	3.2.1. [How to determine the parameters automatically using the GUI](#settingsprepa)
+   3.3. [Run pipeline](#runpipeline)
+    	3.3.2. [Run the analysis per manufacturer automatically using the GUI](#runpipelineg)
+4. [Settings](settingsfile)
+   4.1 [Explanations](#settingsfilee)
+5. [Results](#resultsdescription)
+   5.1. [Result table](#resulttable)
+   5.2 [Analysis issues](#analysisissues)
+   5.3. [Quality control images](#resultimages)
+   5.4. [Log file](#resultlog)
+   5.5. [Settings file](#resultsettings)
+6. [Graphical user interface (GUI)](#gui)
 
 ## Introduction <a name="introduction"></a>
-The tool pyPOCQuant aims to automatically detect and quantify signal bands from Point of Care tests (POC or POCT) from an image. It can batch analyze large amounts of images in parallel.
 
+The tool pyPOCQuant aims to automatically detect and quantify signal bands from **Point of Care tests** (**POC** or **POCT**) from an image. It can batch analyze large amounts of images in parallel.
 
-## Quick start <a name="quickstart"></a>
+An analysis pipeline can be run either from the command line (good for automating large numbers of analysis) or from a desktop application.
 
-1. Copy all the images of the same kind into one folder
-2. Prepare a settings file
-3. Run the pipeline
+> At current stage, almost all operations are supported from the user interface, with the exception of the optional [Split images by strip manufacturer](#splitimages) step.
 
-### Split images by strip manufacturer <a name="splitimages"></a>
+![pyPOCQuant user interface](pyPOCQuantUI.png)
 
-If you have many images in an unorganized way we have a helper script to sort them by manufacturer into subfolders.
+## Command line workflow <a name="command_line_workflow"></a>
+
+1. Split images by POCT manufacturer if needed
+2. Copy all the images of the same kind into one folder
+3. Prepare a settings file
+4. Run the pipeline
+
+### Split images by POCT manufacturer <a name="splitimages"></a>
+
+> This only applies if you collected many images using POCTs from different vendors and stored all the images in one common folder! Analysis settings would need to be slightly adapted for different POCTs shapes and sizes.
+
+If you have many images in an unorganized way we provide a helper script to sort them by manufacturer into subfolders.
+
+> This is currently not integrated into the user interface and needs to be run from console.
 
 ```python
 $ python ./split_images_by_strip_type_parallel.py -f /PATH/TO/INPUT/FOLDER -o /PATH/TO/OUTPUT/FOLDER -w ${NUM_WORKERS}
@@ -45,7 +59,7 @@ $ python ./split_images_by_strip_type_parallel.py -f /PATH/TO/INPUT/FOLDER -o /P
 * `PATH/TO/OUTPUT/FOLDER`: path where all images will be organized into subfolders; one per each strip manufactured. Strip images that cannot be recognized (or do not contain any strip) will be moved to an ` UNDEFINED` subfolder.
 
   * Currently  recognized manufacturers: 
-  * `AUGURIX`
+    * `AUGURIX`
     * `BIOZAK`
     * `CTKBIOTECH`
     * `DRALBERMEXACARE`
@@ -58,41 +72,60 @@ $ python ./split_images_by_strip_type_parallel.py -f /PATH/TO/INPUT/FOLDER -o /P
 
 * `NUM_WORKERS`: number of  parallel processes; e.g. `8`.
 
-
-
 ### Settings file preparation <a name="settingsprep"></a>
+
+You can prepare a default parameter file from the command line as follows:
+
+```bash
+$ python ./pypocquant/pyPOCQuant_FH.py -c /PATH/TO/INPUT/settings_file.conf
+```
+
+Open the file in a text editor and edit it.
+
+```python
+raw_auto_stretch=False
+raw_auto_wb=False
+strip_text_to_search='COVID'
+strip_text_on_right=True
+strip_size=None
+qr_code_border=40
+sensor_size=(61, 249)
+sensor_center=(178, 667)
+subtract_background=True
+sensor_border=(7, 7)
+perform_sensor_search=True
+sensor_thresh_factor=2
+sensor_search_area=(71, 259)
+peak_expected_relative_location=(0.25, 0.53, 0.79)
+verbose=True
+qc=True
+max_workers=None
+```
+
+> Some of the parameter names contain the term `strip`: this is used to indicate the POCT. The prefix `sensor` indicates the measurement region within the `strip`.
+
+See [Explanations](#settingsfilee) for detailed description of the parameters.
+
+> Please notice that some parameters are considered "Advanced"; in the user interface the parameters are separated into "Runtime parameters", "Basic parameters", and "Advanced parameters".
 
 #### How to determine the parameters manually <a name="settingsprepm"></a>
 
-Copy [settings file](#settingsfile) to an empty text file and adjust the parameters to fit your images.
+Open the [settings file](#settingsfile) and adjust the parameters to fit your images.
 
-Sensor parameters are relative to the strip image.
+Important parameters are the `sensor_size`, `sensor_center`, and `sensor_search_area` (the latter being an advanced parameter).
+
+> The user interface allows to easily define those parameters by drawing onto the extracted POCT image.
+
+Sensor parameters are relative to the POCT image.
 
 ![Extrated strip](strip_annotated.png)
 
-Position and extent of areas can easily be obtained, for instance, in Fiji.
+In the following we show how to obtain position and extent of the sensor areas in Fiji. Later we will see how to do the same in the pyPOCQuant user interface.
 
 ![Area selection in Fiji](fiji_selection.png)
 
 * When drawing a rectangular region of interest, the size is displayed in Fiji's toolbar; e.g. `x=539, y=145, **w=230, h=62**`.
 * When hovering over the central pixels in the top or left sides of the selection, the `x`, and `y` coordinates of the center, respectively, are show in Fiji's toolbar; e.g. `x=*601*, y=144, value=214` (and equivalently for `y`).
-
-#### How to determine the parameters automatically using the GUI <a name="settingsprepa"></a>
-
-Use the user interface which will automatically generate the settings file for you and enables you to test the settings before running the full pipeline.
-
-* Select the input folder and click on an image to display it.
-* (1) Hit the `Draw sensor outline` icon in the toolbar and (2) click into the corners of the sensor. The image might need to be rotated and zoomed first.
-
-![](pyPOCQuantSensor-01.PNG)
-
-* Hit the `Draw POCT outline` icon in the toolbar and click into the corners of the POCT
-
-![](pyPOCQuantStrip-01.PNG)
-
-* The parameters will now be estimated automatically from the image.
-* Test the parameters by clicking the `test parameters` button (3). And adjust the polygons or the parameters  if needed.
-* Save the settings file (Ctrl+S, `File`->`Save settings file`)
 
 ### Run the pipeline <a name="runpipline"></a>
 
@@ -107,20 +140,43 @@ $ python pyPOCQuant_FH.py -f /PATH/TO/INPUT/FOLDER/MANUFACTURER -o /PATH/TO/RESU
 * `/PATH/TO/CONFIG/FILE`: path to the configuration file to be used for this analysis. Please see below. Notice that a configuration file will be needed per manufacturer and (possibly) camera combination.
 * `NUM_WORKERS`: number of  parallel processes; e.g. `8`.
 
+## GUI workflow <a name="gui_workflow"></a>
+
+1. Split images by POCT manufacturer if needed
+2. Copy all the images of the same kind into one folder
+3. Select the folder containing the images to be processed
+4. Set all analysis parameters
+5. Run the pipeline
+
+### Split images by POCT manufacturer <a name="splitimages_gui"></a>
+
+> This only applies if you collected many images using POCTs from different vendors and stored all the images in one common folder! Analysis settings would need to be slightly adapted for different POCTs shapes and sizes.
+
+Please notice that this step has not been integrated into the user interface yet, and must be [run from the command line](#splitimages).
+
+#### How to determine the parameters automatically using the GUI <a name="settingsprepa"></a>
+
+A settings file must not necessarily be created in advance. The Parameter Tree can be edited directly. Optionally, settings can be loaded or saved from the UI. 
+
+How to estimate sensor parameters graphically in the UI:
+
+* `Select the input folder` and click on one of the listed images to display it. The POCT region will be automatically extracted and shown in the view at the top. The lower view shows the whole image.
+* Hit the `Draw sensor outline` icon (red arrow) in the toolbar. This will allow you to interactively define the `sensor area and the `peak_expected_relative_location` parameters.
+
+![](pyPOCQuantUI_extracting_POCT.png)
+
+* Draw the four corners of the sensor and place the vertical bars on the bands. This will cause all relevant parameters to be populated in the Parameter Tree. Please notice that, by default, the `sensor_search_area` is set to be 10 pixels wider and taller than the `sensor_size`. This can be changed in the advanced parameters (but beware to keep it only slightly larger than the `sensor_size`: it is meant only for small refinements).
+
+![](pyPOCQuantUI_extracting_sensor_parameters.png)
+
+* You can test current parameters on one image by clicking the `Test parameters` button under the Parameter Tree.
+* Optionally, you can save the settings file (Ctrl+S, `File`->`Save settings file`)
+
 #### Run the analysis per manufacturer automatically using the GUI  <a name="runpiplinea"></a>
 
-* (1) Load a settings file (Ctrl+O, `File`->`load settings file`)
-* (2) Select the input folder (Ctrl+I)
-* `test parameters` (optional)
-* (3) `Run` Click run button to run the pipeline.
+Once the previous steps are done and all parameters are correctly set, you can hit the `Run` button to start the analysis.
 
-![](pyPOCQuantMain-02.PNG)
-
-
-
-
-
-## Settings file <a name="settingsfile"></a>
+## Settings<a name="settingsfile"></a>
 
 The following settings must be specified. These are default values and need to be adopted for a series of the same kind of images. Please note: in the following, `strip` is used to indicate the POCT, and `sensor` to indicate the measurement region within the `strip`.
 
@@ -146,7 +202,25 @@ qc=True
 
 ### Explanations <a name="settingsfilee"></a>
 
-#### Essential parameters
+#### Runtime parameters
+
+##### Number of cores
+
+* The analysis can work in parallel. Specify the maximum number of images that are run in parallel. The maximum allowed value is the number of cores in your machine.
+
+##### qc
+
+* Toggle creation of quality control images.
+* Possible values: `True` or `False`
+* Recommended: `True` when testing parameters.
+
+##### verbose
+
+* Toggle extensive information logging.
+* Possible values: `True` or `False`
+* Recommended: `True` when testing parameters.
+
+#### Basic parameters
 
 ##### sensor_size
 
@@ -155,12 +229,6 @@ qc=True
 ##### sensor_center
 
 *  Coordinates in pixels of the center of the sensor with respect to the strip image: `(y, x)`.
-
-##### sensor_search_area
-
-* Search area in pixels around the sensor: `(height, width)`. 
-* Used only if `skip_sensor_search` is `False`.
-* **Try to keep it just a bit larger than the sensor size: in particular, try to avoid picking up features (e.g. text) in close proximity of the sensor.**
 
 ##### sensor_border_x
 
@@ -197,7 +265,7 @@ qc=True
   | LUMIRATEK       |                                 |
   | NTBIO           |                                 |
 
-  **Pre-calculated `peak_expected_relative_location` values for known POCTs.**
+  **Some pre-calculated `peak_expected_relative_location` values for known POCTs.**
 
 ##### qr_code_border
 
@@ -213,23 +281,15 @@ qc=True
     left hand-side of the strip, the strip will be rotated 180 degrees.
 * Ignored if `strip_text_to_search` is `""`.
 
-#### Info parameters
-
-##### verbose
-
-* Toggle extensive information logging.
-* Possible values: `True` or `False`
-* Recommended: `True` when testing parameters.
-
-##### qc
-
-* Toggle creation of quality control images.
-* Possible values: `True` or `False`
-* Recommended: `True` when testing parameters.
-
 #### Advanced parameters
 
 These parameters will most likely work with the default values above.
+
+##### sensor_search_area
+
+* Search area in pixels around the sensor: `(height, width)`. 
+* Used only if `skip_sensor_search` is `False`.
+* **Try to keep it just a bit larger than the sensor size: in particular, try to avoid picking up features (e.g. text) in close proximity of the sensor.**
 
 ##### sensor_thresh_factor
 
@@ -249,12 +309,13 @@ These parameters will most likely work with the default values above.
 * Possible values: `True` or `False`
 * Recommended: `False`
 
+## Results <a name="resultsdescription"></a>
 
+The analysis pipeline delivers a `.csv` that contains a relatively large table of results. The extracted features are explained in the following.
 
-## Description of results <a name="resultsdescription"></a>
 ### Result table <a name="resulttable"></a>
 
-#### Structure and description of the result table:
+Structure and description of the result table:
 
 * `fid`: patient FID in the form `F5921788`
 * `fid_num`: just the numeric part of the FID (i.e., `5921788`)
@@ -273,13 +334,18 @@ These parameters will most likely work with the default values above.
 * `ctl`: 1 if the control band could be extracted, 0 otherwise.
 * `igm`: 1 if the IgM band could be extracted, 0 otherwise.
 * `igg`: 1 if the IgG band could be extracted, 0 otherwise. 
+* `ctl_abs`: absolute signal strength of the control band,
+* `igm_abs`: absolute signal strength of the IgM band,
+* `igg_abs`: absolute signal strength of the IgG band.
 * `ctl_ratio`: relative signal strength of the control band (always 1.0 if detected)
 * `igm_ratio`: relative signal strength of the IgM band with respect to the control band
 * `igg_ratio`: relative signal strength of the IgG band with respect to the control band
 * `issue`: if issue is 0, the image could be analyzed successfully, if issue > 0 it could not. See the list of issues below
 * `user`: custom field
 
-##### Analysis issues
+> Note: expect small residual variations in the absolute signal strengths (`ctl_abs`, `igm_abs`, and `igg_abs`) across images in a batch due to inhomogeneities  in acquisition.
+
+#### Analysis issues<a name="analysisissues"></a>
 
 Each analyzed image is assigned an integer `issue`:
 
@@ -296,8 +362,6 @@ Each analyzed image is assigned an integer `issue`:
 * 5: peak/band quantification failed
 
 * 6: control band missing
-
-  
 
 ### Quality control images <a name="resultimages"></a>
 
@@ -345,8 +409,6 @@ The log file contains more detailed information for each processed image identif
 
 It informs about the barcode extraction and its rotation, the QR code box rotation, the FID extraction, the actual sensor coordinates and the identified bands.
 
-
-
 Example log:
 
 ```
@@ -364,8 +426,6 @@ File IMG_8489.JPG: the bands were 'normal'.
 ✓ File IMG_8489.JPG: successfully processed and added to results table.
 ```
 
-
-
 ### Settings file <a name="resultsettings"></a>
 
  A settings file is created in the `-o /PATH/TO/RESULTS/FOLDER` with the actually used parameters for the analysis. It can be used to reproduce the obtained results.
@@ -374,34 +434,46 @@ See [settings file section](#settingsfile) for detailed description.
 
 ## Graphical user interface <a name="gui"></a>
 
-![](pyPOCQuantMain-01.PNG)
+The GUI offers several actions via the menu, the toolbar and buttons.
+
+![](pyPOCQuantUI.png)
 
 1. `File menu`:
 
-   * `File`: Lets you load ( `File`-> `Loadsettings file`) and save ( `File`->`Save settings file`) a settings file
+   * `File`: Lets you load ( `File` $\rightarrow$ `Load settings file`) and save ( `File`$\rightarrow$`Save settings file`) a settings file
 
-   * `About`: Get quick instructions and open this manual
+   * `Help`: Get quick instructions and open this manual
+   
 2. `Toolbar`:
-   * `Draw POCT outline`: Activates drawing a polygon by clicking into the corners of the POCT on the images.
-   * `Draw sensor outline`: Activates drawing a polygon by clicking into the corners of the sensor on the images.
-	* `Mirror image vertically`: Mirrors the displayed image vertically
-	* `Mirror image horizontally`: Mirrors the displayed image horizontally
-	* `Rotate image cw`: Rotates the displayed image clock wise
-	* `Rotate image ccw`: Rotates the displayed image counter clock wise
-	* `Zoom in`: Zooms in  the displayed image 
-	* `Zoom out`: Zooms out  the displayed image 
-3. `Open input folder`: Lets you open the input folder
+   * `Load settings from file`: Load settings from file into the Parameter Tree.
+   * ``Save settings to file`: Save current settings to file.
+	* `Draw sensor outline`: Activates drawing a polygon by clicking into the corners of the sensor on the images.
+	* `Delete sensor`: Deletes currently drawn sensor.
+	* `Mirror image vertically`: Mirrors the displayed image vertically.
+	* `Mirror image horizontally`: Mirrors the displayed image horizontally.
+	* `Rotate clockwise`: Rotates the displayed image clock wise.
+	* `Rotate counter clockwise`: Rotates the displayed image counter clock wise.
+	* `Set rotation angle in degrees`: Specifies the rotation angle.
+	* `Zoom in`: Zooms in  the displayed image.
+	* `Zoom out`: Zooms out  the displayed image .
+	* `Reset zoom`: Resets the zoom level.
+	* `Show / hide console`: shows or hides the console at the bottom of the UI.
+	
+3. ``Select input folder`: Allows to specify the input folder.
 
-   `Open output folder`: (Optional) Lets you select a output folder. If left empty a output subfolder is automatically generated  in the input folder.
+   `Select output folder`: (Optional) Lets you select a output folder. If left empty a output subfolder is automatically generated  in the input folder.
 
    `Image list`: Lists all available images in the input folder. Click onto the filename to display one in **5**
 
-4. `Parameters`: Adjust parameters manually if needed.
+4. `Parameter Tree`: Adjust parameters manually if needed.
 
-5. `Display area`: Area to display an image.
+5. `POCT area`: Shows the extracted POCT and allows for drawing the sensor.
 
-6. `test parameters`: Runs the pipeline on the displayed image with the current settings specified in **4**. The test folder will be opened automatically to inspect the control files.
+6. `Display area`: Shows the currently selected image.
 
-   `run pipeline`: Runs the pipeline with the current settings specified in **4**. If a settings file exist you can load it in **1** and run it directly after selecting the correct input folder in **3**.
+7. `Test parameters`: Runs the pipeline on the selected image with current settings. The test folder will be opened automatically to inspect the control files.
 
-7. `Log`: Information the user about performed actions.
+8. `Run`: Runs the pipeline with the current settings**.
+
+9. `Log`: Information the user about performed actions.
+
