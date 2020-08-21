@@ -1,37 +1,12 @@
 # pyPOCQuant user manual
 
-## Table of contents
-
-1. [Introduction](#introduction)
-2. [Command line workflow](#command_line_workflow)
-   2.1. [Split images by strip manufacturer](#splitimages)
-   2.2. [Settings file preparation](#settingsprep)
-    	2.2.1. [How to determine the parameters manually](#settingsprepm)
-   2.3. [Run pipeline](#runpipeline)
-   	2.3.1. [Run the analysis per manufacturer manually](#runpipelinem)
-3. [GUI workflow](#gui_workflow)
-   3.1. [Split images by strip manufacturer](#splitimages)
-   3.2. [Settings file preparation](#settingsprep)
-    	3.2.1. [How to determine the parameters automatically using the GUI](#settingsprepa)
-   3.3. [Run pipeline](#runpipeline)
-    	3.3.2. [Run the analysis per manufacturer automatically using the GUI](#runpipelineg)
-4. [Settings](settingsfile)
-   4.1 [Explanations](#settingsfilee)
-5. [Results](#resultsdescription)
-   5.1. [Result table](#resulttable)
-   5.2 [Analysis issues](#analysisissues)
-   5.3. [Quality control images](#resultimages)
-   5.4. [Log file](#resultlog)
-   5.5. [Settings file](#resultsettings)
-6. [Graphical user interface (GUI)](#gui)
-
 ## Introduction <a name="introduction"></a>
 
 The tool pyPOCQuant aims to automatically detect and quantify signal bands from **Point of Care tests** (**POC** or **POCT**) from an image. It can batch analyze large amounts of images in parallel.
 
 An analysis pipeline can be run either from the command line (good for automating large numbers of analysis) or from a desktop application.
 
-> At current stage, almost all operations are supported from the user interface, with the exception of the optional [Split images by strip manufacturer](#splitimages) step.
+> At current stage, almost all operations are supported from the user interface, with the exception of the optional [Split images by strip manufacturer](#Split-images-by-POCT-manufacturer) step.
 
 ![pyPOCQuant user interface](pyPOCQuantUI.png)
 
@@ -42,7 +17,7 @@ An analysis pipeline can be run either from the command line (good for automatin
 3. Prepare a settings file
 4. Run the pipeline
 
-### Split images by POCT manufacturer <a name="splitimages"></a>
+### Split images by POCT manufacturer
 
 > This only applies if you collected many images using POCTs from different vendors and stored all the images in one common folder! Analysis settings would need to be slightly adapted for different POCTs shapes and sizes.
 
@@ -50,7 +25,7 @@ If you have many images in an unorganized way we provide a helper script to sort
 
 > This is currently not integrated into the user interface and needs to be run from console.
 
-```python
+```bash
 $ python ./split_images_by_strip_type_parallel.py -f /PATH/TO/INPUT/FOLDER -o /PATH/TO/OUTPUT/FOLDER -w ${NUM_WORKERS}
 ```
 
@@ -82,7 +57,7 @@ $ python ./pypocquant/pyPOCQuant_FH.py -c /PATH/TO/INPUT/settings_file.conf
 
 Open the file in a text editor and edit it.
 
-```python
+```bash
 raw_auto_stretch=False
 raw_auto_wb=False
 strip_text_to_search='COVID'
@@ -104,13 +79,13 @@ max_workers=None
 
 > Some of the parameter names contain the term `strip`: this is used to indicate the POCT. The prefix `sensor` indicates the measurement region within the `strip`.
 
-See [Explanations](#settingsfilee) for detailed description of the parameters.
+See [Explanations](#Explanations) for detailed description of the parameters.
 
 > Please notice that some parameters are considered "Advanced"; in the user interface the parameters are separated into "Runtime parameters", "Basic parameters", and "Advanced parameters".
 
 #### How to determine the parameters manually <a name="settingsprepm"></a>
 
-Open the [settings file](#settingsfile) and adjust the parameters to fit your images.
+Open the [settings file](#Settings) and adjust the parameters to fit your images.
 
 Important parameters are the `sensor_size`, `sensor_center`, and `sensor_search_area` (the latter being an advanced parameter).
 
@@ -131,7 +106,7 @@ In the following we show how to obtain position and extent of the sensor areas i
 
 #### Run the analysis per manufacturer manually <a name="runpiplinem"></a>
 
-```python
+```bash
 $ python pyPOCQuant_FH.py -f /PATH/TO/INPUT/FOLDER/MANUFACTURER -o /PATH/TO/RESULTS/FOLDER -s /PATH/TO/CONFIG/FILE -w ${NUM_WORKERS} 
 ```
 
@@ -152,7 +127,7 @@ $ python pyPOCQuant_FH.py -f /PATH/TO/INPUT/FOLDER/MANUFACTURER -o /PATH/TO/RESU
 
 > This only applies if you collected many images using POCTs from different vendors and stored all the images in one common folder! Analysis settings would need to be slightly adapted for different POCTs shapes and sizes.
 
-Please notice that this step has not been integrated into the user interface yet, and must be [run from the command line](#splitimages).
+Please notice that this step has not been integrated into the user interface yet, and must be [run from the command line](#Split-images-by-POCT-manufacturer).
 
 #### How to determine the parameters automatically using the GUI <a name="settingsprepa"></a>
 
@@ -176,7 +151,7 @@ How to estimate sensor parameters graphically in the UI:
 
 Once the previous steps are done and all parameters are correctly set, you can hit the `Run` button to start the analysis.
 
-## Settings<a name="settingsfile"></a>
+## Settings
 
 The following settings must be specified. These are default values and need to be adopted for a series of the same kind of images. Please note: in the following, `strip` is used to indicate the POCT, and `sensor` to indicate the measurement region within the `strip`.
 
@@ -200,7 +175,7 @@ verbose=True
 qc=True
 ```
 
-### Explanations <a name="settingsfilee"></a>
+### Explanations
 
 #### Runtime parameters
 
@@ -254,16 +229,16 @@ qc=True
 
 * Expected relative peak positions as a function of the width of the sensor (= 1.0).
 
-  | POCT            | peak_expected_relative_location |
-  | --------------- | ------------------------------- |
-  | AUGURIX         | (0.30, 0.50, 0.70)              |
-  | BIOZAK          | (0.25, 0.50, 0.75)              |
-  | CTKBIOTECH      | (0.25, 0.53, 0.79)              |
-  | SUREBIOTECH     | (0.31, 0.54, 0.75)              |
-  | TARMINA         |                                 |
-  | DRALBERMEXACARE |                                 |
-  | LUMIRATEK       |                                 |
-  | NTBIO           |                                 |
+| POCT            | peak_expected_relative_location |
+| --------------- | ------------------------------- |
+| AUGURIX         | (0.30, 0.50, 0.70)              |
+| BIOZAK          | (0.25, 0.50, 0.75)              |
+| CTKBIOTECH      | (0.25, 0.53, 0.79)              |
+| SUREBIOTECH     | (0.31, 0.54, 0.75)              |
+| TARMINA         | -                               |
+| DRALBERMEXACARE | -                               |
+| LUMIRATEK       | -                               |
+| NTBIO           | -                               |
 
   **Some pre-calculated `peak_expected_relative_location` values for known POCTs.**
 
@@ -430,7 +405,7 @@ File IMG_8489.JPG: the bands were 'normal'.
 
  A settings file is created in the `-o /PATH/TO/RESULTS/FOLDER` with the actually used parameters for the analysis. It can be used to reproduce the obtained results.
 
-See [settings file section](#settingsfile) for detailed description.
+See [settings file section](#Settings) for detailed description.
 
 ## Graphical user interface <a name="gui"></a>
 
@@ -440,7 +415,7 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
 1. `File menu`:
 
-   * `File`: Lets you load ( `File` $\rightarrow$ `Load settings file`) and save ( `File`$\rightarrow$`Save settings file`) a settings file
+   * `File`: Lets you load ( `File` $\rightarrow$ `Load settings file`) and save ( `File` $\rightarrow$ `Save settings file`) a settings file
 
    * `Help`: Get quick instructions and open this manual
    
