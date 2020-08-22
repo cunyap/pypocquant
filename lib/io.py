@@ -62,9 +62,5 @@ def load_and_process_image(
     else:
         return None
 
-    if not to_rgb:
-        # BGR to RGB
-        image = image[:, :, [0, 1, 2]] = image[:, :, [2, 1, 0]]
-
     # Return the image
     return image

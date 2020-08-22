@@ -1628,34 +1628,37 @@ def use_hough_transform_to_rotate_strip_if_needed(img_gray, img=None, qc=False):
         maxRadius=35
     )
 
-    # Process the circles
-    circles = np.uint16(np.around(circles))
-    num_best_circles = 15
-    c = 0
-    for centers in circles[0, :]:
+    # Were there any circles found?
+    if circles is not None:
 
-        # Get the center coordinates and the radius
-        center_x, center_y, radius = centers
+        # Process the circles
+        circles = np.uint16(np.around(circles))
+        num_best_circles = 15
+        c = 0
+        for centers in circles[0, :]:
 
-        # Count in left region
-        ret_left = point_in_rect([center_x, center_y], left_rect)
-        if ret_left:
-            is_left = is_left + 1
+            # Get the center coordinates and the radius
+            center_x, center_y, radius = centers
 
-        # Count in right region
-        ret_right = point_in_rect([center_x, center_y], right_rect)
-        if ret_right:
-            is_right = is_right + 1
+            # Count in left region
+            ret_left = point_in_rect([center_x, center_y], left_rect)
+            if ret_left:
+                is_left = is_left + 1
 
-        if qc:
-            if ret_left or ret_right:
-                cv2.circle(qc_image, (center_x, center_y), radius, (255, 0, 255), 1)
-            else:
-                cv2.circle(qc_image, (center_x, center_y), radius, (255, 0, 0), 1)
+            # Count in right region
+            ret_right = point_in_rect([center_x, center_y], right_rect)
+            if ret_right:
+                is_right = is_right + 1
 
-        c += 1
-        if c >= (num_best_circles - 1):
-            break
+            if qc:
+                if ret_left or ret_right:
+                    cv2.circle(qc_image, (center_x, center_y), radius, (255, 0, 255), 1)
+                else:
+                    cv2.circle(qc_image, (center_x, center_y), radius, (255, 0, 0), 1)
+
+            c += 1
+            if c >= (num_best_circles - 1):
+                break
     if qc:
         # Add search rectangles to image (the winning one is in red)
         cv2.rectangle(
