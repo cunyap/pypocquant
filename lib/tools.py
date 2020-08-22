@@ -67,6 +67,16 @@ def extract_strip(image, qr_code_border, strip_text_to_search="", strip_text_on_
     # Align the strip box with the image borders (remove potential rotation)
     image, box_rotation_angle = align_box_with_image_border_fh(barcode_data, image)
 
+    # In case there was still a significant rotation, find the location of the barcodes yet again
+    if abs(box_rotation_angle) > 0.5:
+        barcode_data, _, _, _, _, _, _, _, best_score, _ = \
+            try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
+                image,
+                lower_bound_range=(0, 5, 15, 25, 35),
+                upper_bound_range=(100, 98, 95, 92, 89),
+                scaling=(0.25, 0.5)
+            )
+
     # Find location of the strip box from the barcode data
     box, qr_code_extents, qc_image, box_rect = find_strip_box_from_barcode_data_fh(
         image,

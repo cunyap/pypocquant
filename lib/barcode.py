@@ -991,82 +991,97 @@ def rotate_if_needed_fh(image, barcode_data, image_log, verbose=True):
 
     # Use the information to understand the orientation of the image
 
-    # Case 1: correct orientation
-    top_left_y = -1
-    top_left_x = -1
-    left_y = -1
-    left_x = -1
-    right_y = -1
-    right_x = -1
-
+    # Try to find the LEFT X AXIS
+    n = 0
+    left_x_axis = 0
     if positions["TL_P"] is not None:
-        top_left_y = positions["TL_P"]["y"]
-        top_left_x = positions["TL_P"]["x"]
-
+        left_x_axis += positions["TL_P"]["x"]
+        n += 1
     if positions["TL"] is not None:
-        if top_left_y == -1:
-            top_left_y = positions["TL"]["y"]
-            top_left_x = positions["TL"]["x"]
-        else:
-            left_y = positions["TL"]["y"]
-            left_x = positions["TL"]["x"]
-
+        left_x_axis += positions["TL"]["x"]
+        n += 1
     if positions["BL"] is not None:
-        if top_left_y == -1:
-            top_left_y = positions["BL"]["y"]
-            top_left_x = positions["BL"]["x"]
-        if left_y == -1:
-            left_y = positions["BL"]["y"]
-            left_x = positions["BL"]["x"]
-
+        left_x_axis += positions["BL"]["x"]
+        n += 1
     if positions["L_G"] is not None:
-        if top_left_y == -1:
-            top_left_y = positions["L_G"]["y"]
-            top_left_x = positions["L_G"]["x"]
-        if left_y == -1:
-            left_y = positions["L_G"]["y"]
-            left_x = positions["L_G"]["x"]
+        left_x_axis += positions["L_G"]["x"]
+        n += 1
+    if n > 0:
+        left_x_axis = left_x_axis / n
 
+    # Try to find the RIGHT X AXIS
+    n = 0
+    right_x_axis = 0
     if positions["TR"] is not None:
-        right_y = positions["TR"]["y"]
-        right_x = positions["TR"]["x"]
-
+        right_x_axis += positions["TR"]["x"]
+        n += 1
     if positions["BR"] is not None:
-        if right_y == -1:
-            right_y = positions["BR"]["y"]
-            right_x = positions["BR"]["x"]
-
+        right_x_axis += positions["BR"]["x"]
+        n += 1
     if positions["R_G"] is not None:
-        if right_y == -1:
-            right_y = positions["R_G"]["y"]
-            right_x = positions["R_G"]["x"]
+        right_x_axis += positions["R_G"]["x"]
+        n += 1
+    if n > 0:
+        right_x_axis = right_x_axis / n
+
+    # Try to find the TOP Y AXIS
+    n = 0
+    top_y_axis = 0
+    if positions["TL_P"] is not None:
+        top_y_axis += positions["TL_P"]["y"]
+        n += 1
+    if positions["TL"] is not None:
+        top_y_axis += positions["TL"]["y"]
+        n += 1
+    if positions["TR"] is not None:
+        top_y_axis += positions["TR"]["y"]
+        n += 1
+    if n > 0:
+        top_y_axis = top_y_axis / n
+
+    # Try to find the BOTTOM Y AXIS
+    n = 0
+    bottom_y_axis = 0
+    if positions["BL"] is not None:
+        bottom_y_axis += positions["BL"]["y"]
+        n += 1
+    if positions["BR"] is not None:
+        bottom_y_axis += positions["BR"]["y"]
+        n += 1
+    if positions["L_G"] is not None:
+        bottom_y_axis += positions["L_G"]["y"]
+        n += 1
+    if positions["R_G"] is not None:
+        bottom_y_axis += positions["R_G"]["y"]
+        n += 1
+    if n > 0:
+        bottom_y_axis = bottom_y_axis / n
+
+    # Now use the relative position of the main axes to
+    # determine the orientation of the image.
 
     # Case 1: the image is already oriented correctly
-    if top_left_y != -1 and left_y != -1 and left_x != -1 and right_x != -1:
-        if top_left_y < left_y and left_x < right_x:
-            # The image does not need to be rotated
-            image_was_rotated = False
-            return image_was_rotated, image, image_log
+    if left_x_axis < right_x_axis and top_y_axis < bottom_y_axis:
+        # The image does not need to be rotated
+        image_was_rotated = False
+        return image_was_rotated, image, image_log
 
     # Case 2: the image is rotated 180 degrees
-    if top_left_y != -1 and left_y != -1 and left_x != -1 and right_x != -1:
-        if top_left_y > left_y and left_x > right_x:
+    if left_x_axis > right_x_axis and top_y_axis > bottom_y_axis:
             # The image needs to be rotated 180 degrees
             image = rotate(image, 180)
             image_was_rotated = True
             return image_was_rotated, image, image_log
 
     # Case 3: the image is rotated 90 degrees clockwise
-    if left_y != -1 and left_x != -1 and left_y != -1 and right_y != -1:
-        if left_x < top_left_x and left_y < right_y:
+    if left_x_axis > right_x_axis and top_y_axis < bottom_y_axis:
             # The image needs to be rotated 90 degrees counter-clockwise
             image = rotate(image, 90)
             image_was_rotated = True
             return image_was_rotated, image, image_log
 
-    # Case 4: the image is rotated 90 degrees counter-clockwise
-    if left_y != -1 and left_x != -1 and left_y != -1 and right_y != -1:
-        if left_x > top_left_x and left_y > right_y:
+    # Case 4: the image is rotated 90 degrees counter-clockwise (270 degrees clockwise)
+    if left_x_axis < right_x_axis and top_y_axis > bottom_y_axis:
             # The image needs to be rotated 90 degrees clockwise
             image = rotate(image, -90)
             image_was_rotated = True
@@ -1074,9 +1089,11 @@ def rotate_if_needed_fh(image, barcode_data, image_log, verbose=True):
 
     # Unhandled case!
     image_log.append(
-        f"top_left = (y={top_left_y}, x={top_left_x}),"
-        f" left = (y={left_y}, x={left_x}),"
-        f" right = (y={right_y}, x={right_x})"
+        f"Unhandled rotation case: " +
+        f"top y axis = {top_y_axis}; " +
+        f"bottom Y axis = {bottom_y_axis}; " +
+        f"left x axis = {left_x_axis}; " +
+        f"right x axis = {right_x_axis}."
     )
 
     return False, image, image_log
