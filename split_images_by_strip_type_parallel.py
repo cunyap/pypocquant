@@ -9,8 +9,8 @@ import rawpy
 from pathlib import Path
 from tqdm import tqdm
 
-from lib.analysis import read_patient_data_by_ocr
-from lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, rotate_if_needed_fh, \
+from pypocquant.lib.analysis import read_patient_data_by_ocr
+from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, rotate_if_needed_fh, \
     find_strip_box_from_barcode_data_fh
 
 from pypocquant.lib.io import load_and_process_image
