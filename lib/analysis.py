@@ -1409,6 +1409,45 @@ def extract_rotated_strip_from_box(box_gray, box):
     optimal_threshold = filters.threshold_li(box_gray)
     BW = box_gray > optimal_threshold
 
+    # Make sure that there is no global border around the image, or
+    # the morphological operations below will fill in the whole image
+
+    # Carve a hole in the left edge (if needed)
+    x = int(0)
+    y = int(box.shape[0] / 2)
+    while BW[y - 1, x] or BW[y, x] or BW[y + 1, x]:
+        BW[y - 1, x] = False
+        BW[y, x] = False
+        BW[y + 1, x] = False
+        x += 1
+
+    # Carve a hole in the right edge (if needed)
+    x = int(box.shape[1]) - 1
+    y = int(box.shape[0] / 2)
+    while BW[y - 1, x] or BW[y, x] or BW[y + 1, x]:
+        BW[y - 1, x] = False
+        BW[y, x] = False
+        BW[y + 1, x] = False
+        x -= 1
+
+    # Carve a hole in the top edge (if needed)
+    x = int(box.shape[1] / 2)
+    y = int(0)
+    while BW[y, x - 1] or BW[y, x] or BW[y, x + 1]:
+        BW[y, x - 1] = False
+        BW[y, x] = False
+        BW[y, x + 1] = False
+        y += 1
+
+    # Carve a hole in the bottom edge (if needed)
+    x = int(box.shape[1] / 2)
+    y = int(box.shape[0]) - 1
+    while BW[y, x - 1] or BW[y, x] or BW[y, x + 1]:
+        BW[y, x - 1] = False
+        BW[y, x] = False
+        BW[y, x + 1] = False
+        y -= 1
+
     # Clean up the mask
     BW = binary_fill_holes(BW)
     BW = binary_opening(BW, iterations=3)
