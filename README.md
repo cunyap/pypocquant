@@ -38,10 +38,16 @@ First read the manual [MANUAL](manual/UserInstructions.md)
    git clone https://git.bsse.ethz.ch/cunya/pypocquant.git
    ```
 
-4. Navigate into the `pypocquant` and run the scripts as described in the manual. i.e.
+4. Navigate into the root folder of `pypocquant` and run the scripts as described in the manual. i.e.
 
    ```
-   python pyPOCQuant_FH.py -f D:\Large_Study\COVID_19_POCT\Camera1\100CANON\sorted\SUREBIOTECH -s config\config_FH_SUREBIOTECH_camera1.conf -w 10
+   python -m pypocquant.pyPOCQuant_FH -f D:\Large_Study\COVID_19_POCT\Camera1\100CANON\sorted\SUREBIOTECH -s config\config_FH_SUREBIOTECH_camera1.conf -w 10
+   ```
+   
+   to split images:
+   
+    ```
+   python -m pypocquant.split_images_by_strip_type_parallel -f D:\Large_Study\COVID_19_POCT\Camera12\113NCD90 -o D:\Large_Study\COVID_19_POCT\Camera12\113NCD90\sorted -w 10
    ```
 
    
