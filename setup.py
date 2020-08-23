@@ -28,8 +28,9 @@ setup(
         'pandas',
         'scikit-learn',
         'scikit-image',
-        'PyQT5',
-		'nbconvert',
-		'jupytext'
+        'pyqt==5.9.2',
+        'nbconvert',
+        'jupytext'
     ],
 )
+
