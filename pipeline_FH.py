@@ -46,7 +46,8 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
         results = list(tqdm(executor.map(run_n, files), total=len(files)))
     for result in results:
         if result is not None:
-            res.append(result[0])
+            if result[0]:
+                res.append(result[0])
             log_list.append(result[1])
     return res, log_list
 
