@@ -483,8 +483,8 @@ def analyze_measurement_window(
         # Extract the column (without border)
         column = window[border_y: window.shape[0] - border_y, c]
 
-        # Calculate and store the mean value
-        profile[c] = np.mean(column)
+        # Calculate and store the median value
+        profile[c] = np.median(column)
 
     # Subtract the background
     if subtract_background:
@@ -639,10 +639,10 @@ def analyze_measurement_window(
         for lower_bound, upper_bound in zip(valid_lower_bounds, valid_upper_bounds):
             ax.plot([lower_bound, upper_bound], [profile[lower_bound], profile[upper_bound]], 'o-', linewidth=2)
 
-        # Plot the estimated background
+        # Plot the peak threshold
         ax.plot([0, len(profile)], [peak_threshold, peak_threshold], 'r--')
 
-        # Plot the peak threshold
+        # Plot the estimated background
         ax.plot([0, len(profile)], [md, md], 'g--')
 
         # Save to output folder
