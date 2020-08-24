@@ -1455,13 +1455,40 @@ def extract_rotated_strip_from_box(box_gray, box):
     # Find the connected components
     labels, nb = label(BW)
 
-    # Find the largest object
-    areas = [np.sum(labels == x) for x in range(1, nb + 1)]
-    indx = 1 + np.argmax(areas)
+    # Now we want to find a large object (not necessarily the largest)
+    # that contains the center of the image.
+    center_y = box_gray.shape[0] // 2
+    center_x = box_gray.shape[1] // 2
 
-    # Copy the object to a new mask
-    nBW = (0 * BW.copy()).astype(np.uint8)
-    nBW[labels == indx] = 255
+    # Collect all objects areas
+    areas = [np.sum(labels == x) for x in range(1, nb + 1)]
+
+    is_found = False
+    while not is_found:
+
+        # Gets currently largest object (might be changed
+        # at the end of current iteration)
+        indx = 1 + np.argmax(areas)
+
+        # Make sure that we haven't already processed all objects
+        if areas[indx - 1] < 0:
+            return None, None
+
+        # Copy the object to a new mask
+        nBW = (0 * BW.copy()).astype(np.uint8)
+        nBW[labels == indx] = 255
+
+        # Is the pixel at the center of the image contained in
+        # this object
+        if nBW[center_y, center_x] == 255:
+            # The center pixel is contained in this object;
+            # with use this.
+            is_found = True
+        else:
+            # This object does not cover the center of the image;
+            # we test the second largest. We eliminate current
+            # object from the race and continue.
+            areas[indx - 1] = -1
 
     # Find the (possibly rotated) contour
     # contours, hierarchy = cv2.findContours(nBW, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
