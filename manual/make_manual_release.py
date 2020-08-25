@@ -1,19 +1,8 @@
-import os
-import shutil
+import sys
 
-print('|-------------------------------------------------------------------------------------------------------------|')
-print('| Start building UserInstructions.html from markdown file:')
-print('|-------------------------------------------------------------------------------------------------------------|')
-stream = os.popen('jupytext --to notebook UserInstructions.md')
-output = stream.read()
-print(output)
-stream = os.popen('jupyter nbconvert UserInstructions.ipynb --to=html_embed --template toc2')
-output = stream.read()
-print(output)
+from pypocquant.manual import build_manual
 
-newPath = shutil.copy('UserInstructions.html', '../../../../resources/base')
-print(f'Copied resulting file to {newPath}')
-print('|-------------------------------------------------------------------------------------------------------------|')
-print('| Done.')
-print('|-------------------------------------------------------------------------------------------------------------|')
+if __name__ == "__main__":
+    build_manual()
 
+    sys.exit(0)
