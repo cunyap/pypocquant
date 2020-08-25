@@ -34,6 +34,9 @@ def load_and_process_image(
         # openCV opens the image in BGR mode
         image = cv2.imread(full_filename)
 
+        if image is None:
+            return None
+
         # Convert to RGB?
         if to_rgb:
             # Swap to RGB as requested
@@ -51,6 +54,9 @@ def load_and_process_image(
                 use_camera_wb=False,
                 gamma=(1, 1),
                 output_bps=8)
+
+            if image is None:
+                return None
 
             if to_rgb:
                 # The image is already in RGB, nothing to do
