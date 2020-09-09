@@ -78,7 +78,6 @@ if __name__ == '__main__':
         "strip_try_correct_orientation_rects": (0.52, 0.15, 0.09),
         "strip_text_to_search": "COVID",
         "strip_text_on_right": True,
-        "strip_size": None,
         "qr_code_border": 40,
         "sensor_size": (61, 249),
         "sensor_center": (178, 667),
@@ -144,6 +143,7 @@ if __name__ == '__main__':
     # Make sure that the settings file is usable
     if DEFAULT_PARAMETERS.keys() != settings.keys():
         print(f"The settings file {settings_file} is not valid.")
+        print(f"Please check the following keys: {str(set(DEFAULT_PARAMETERS.keys()) - set(settings.keys()))}.")
         sys.exit(1)
 
     # Max number of cores
