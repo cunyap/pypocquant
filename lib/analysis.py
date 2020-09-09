@@ -1746,7 +1746,7 @@ def use_hough_transform_to_rotate_strip_if_needed(
         cv2.HOUGH_GRADIENT,
         1,
         1,
-        param1=100,
+        param1=75,
         param2=20,
         minRadius=min_radius,
         maxRadius=max_radius
