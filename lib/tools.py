@@ -5,13 +5,33 @@ from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_line
 from pypocquant.lib.processing import BGR2Gray
 
 
-def extract_strip(image, qr_code_border, strip_text_to_search="", strip_text_on_right=True):
+def extract_strip(image,
+                  qr_code_border,
+                  strip_try_correct_orientation,
+                  strip_try_correct_orientation_rects=(0.52, 0.15, 0.09),
+                  strip_text_to_search="",
+                  strip_text_on_right=True
+    ):
     """Attempts to extract the strip from the original image.
     :param image: numpy array
         RGB image to be processed.
 
     :param qr_code_border: int
         Lateral and vertical extension of the (white) border around each QR code.
+
+    :param strip_try_correct_orientation: bool
+        Try to assess and possibly correct for wrong orientation of the strip by searching for the
+        position of the injection inlet.
+
+    :param strip_try_correct_orientation_rects: tuple
+        Tuple containing information about the relative position of the two rectangles
+        to be searched for the inlet on both sides of the center of the image:
+             rectangle_props[0]: relative (0..1) vertical height of the rectangle with
+                                 respect to the image height.
+             rectangle_props[1]: relative (0..1) distance of the left edge of the right rectangle
+                                 with respect to the center of the image.
+             rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
+                                 with respect to the center of the image.
 
     :param strip_text_to_search: str
         Text to search on the strip to assess orientation. Set to "" to skip.
@@ -101,22 +121,26 @@ def extract_strip(image, qr_code_border, strip_text_to_search="", strip_text_on_
     # in the box, we will try a couple of approaches to determine
     # whether we should rotate it 180 degrees.
 
-    # Use the Hough transform to look for expected details in the
-    # strip.
-    strip_gray_for_analysis, strip_for_analysis, _, _ = \
-        use_hough_transform_to_rotate_strip_if_needed(
-            strip_gray_for_analysis,
-            strip_for_analysis,
-            qc=False
-        )
+    left_rect = right_rect = None
+    if strip_try_correct_orientation:
+        # Use the Hough transform to look for expected details in the
+        # strip.
+        strip_gray_for_analysis, strip_for_analysis, _, _, left_rect, right_rect = \
+            use_hough_transform_to_rotate_strip_if_needed(
+                strip_gray_for_analysis,
+                strip_try_correct_orientation_rects,
+                strip_for_analysis,
+                qc=False
+            )
 
-    # Use tesseract to find expected text from the strip.
-    strip_gray_for_analysis, strip_for_analysis, _ = \
-        use_ocr_to_rotate_strip_if_needed(
-            strip_gray_for_analysis,
-            strip_for_analysis,
-            strip_text_to_search,
-            strip_text_on_right
-        )
+    if strip_text_to_search != "":
+        # Use tesseract to find expected text from the strip.
+        strip_gray_for_analysis, strip_for_analysis, _ = \
+            use_ocr_to_rotate_strip_if_needed(
+                strip_gray_for_analysis,
+                strip_for_analysis,
+                strip_text_to_search,
+                strip_text_on_right
+            )
 
-    return strip_for_analysis, ""
+    return strip_for_analysis, "", left_rect, right_rect

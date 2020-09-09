@@ -25,9 +25,11 @@ plt.switch_backend('qt5agg')
 
 
 def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
-             results_folder_path, strip_text_to_search, strip_text_on_right,
-             min_sensor_score, qr_code_border, perform_sensor_search,
-             sensor_size, sensor_center, sensor_search_area, sensor_thresh_factor,
+             results_folder_path, strip_try_correct_orientation,
+             strip_try_correct_orientation_rects, strip_text_to_search,
+             strip_text_on_right, min_sensor_score, qr_code_border,
+             perform_sensor_search, sensor_size, sensor_center,
+             sensor_search_area, sensor_thresh_factor,
              sensor_border, peak_expected_relative_location,
              subtract_background, verbose, qc, max_workers=4):
     res = []
@@ -35,6 +37,8 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         run_n = partial(run, raw_auto_stretch=raw_auto_stretch, raw_auto_wb=raw_auto_wb,
                         input_folder_path=input_folder_path, results_folder_path=results_folder_path,
+                        strip_try_correct_orientation=strip_try_correct_orientation,
+                        strip_try_correct_orientation_rects=strip_try_correct_orientation_rects,
                         strip_text_to_search=strip_text_to_search, strip_text_on_right=strip_text_on_right,
                         min_sensor_score=min_sensor_score, qr_code_border=qr_code_border,
                         perform_sensor_search=perform_sensor_search, sensor_size=sensor_size,
@@ -57,6 +61,8 @@ def run_FH(
         results_folder_path: Path,
         raw_auto_stretch: bool = False,
         raw_auto_wb: bool = False,
+        strip_try_correct_orientation: bool = True,
+        strip_try_correct_orientation_rects: tuple = (0.52, 0.15, 0.09),
         strip_text_to_search: str = "COVID",
         strip_text_on_right: bool = True,
         min_sensor_score: float = 0.85,
@@ -91,6 +97,20 @@ def run_FH(
     :param raw_auto_wb: bool
         Whether to automatically stretch image intensities of RAW images on load.
         This does not affect JPEG images!
+
+    :param strip_try_correct_orientation: bool
+        Try to assess and possibly correct for wrong orientation of the strip by searching for the
+        position of the injection inlet.
+
+    :param strip_try_correct_orientation_rects: tuple
+        Tuple containing information about the relative position of the two rectangles
+        to be searched for the inlet on both sides of the center of the image:
+             rectangle_props[0]: relative (0..1) vertical height of the rectangle with
+                                 respect to the image height.
+             rectangle_props[1]: relative (0..1) distance of the left edge of the right rectangle
+                                 with respect to the center of the image.
+             rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
+                                 with respect to the center of the image.
 
     :param strip_text_to_search: str
         Text to search on the strip to assess orientation. Set to "" to skip.
@@ -153,11 +173,13 @@ def run_FH(
 
     # Get quantification results
     rows_list, log_list = run_pool(filenames, raw_auto_stretch, raw_auto_wb, input_folder_path,
-                                   results_folder_path, strip_text_to_search, strip_text_on_right,
-                                   min_sensor_score, qr_code_border, perform_sensor_search,
-                                   sensor_size, sensor_center, sensor_search_area, sensor_thresh_factor,
-                                   sensor_border, peak_expected_relative_location,
-                                   subtract_background, verbose, qc, max_workers=max_workers)
+                                   results_folder_path, strip_try_correct_orientation,
+                                   strip_try_correct_orientation_rects, strip_text_to_search,
+                                   strip_text_on_right, min_sensor_score, qr_code_border,
+                                   perform_sensor_search, sensor_size, sensor_center,
+                                   sensor_search_area, sensor_thresh_factor, sensor_border,
+                                   peak_expected_relative_location, subtract_background,
+                                   verbose, qc, max_workers=max_workers)
 
     # Save data frame
     data = pd.DataFrame(rows_list)
@@ -176,6 +198,8 @@ def run_FH(
         {
             "raw_auto_stretch": raw_auto_stretch,
             "raw_auto_wb": raw_auto_wb,
+            "strip_try_correct_orientation": strip_try_correct_orientation,
+            "strip_try_correct_orientation_rects": strip_try_correct_orientation_rects,
             "strip_text_to_search": strip_text_to_search,
             "strip_text_on_right": strip_text_on_right,
             "qr_code_border": qr_code_border,
@@ -204,6 +228,8 @@ def run(
         raw_auto_wb,
         input_folder_path: Path,
         results_folder_path: Path,
+        strip_try_correct_orientation: bool,
+        strip_try_correct_orientation_rects: tuple,
         strip_text_to_search: str,
         strip_text_on_right: bool,
         min_sensor_score: float = 0.85,
@@ -218,6 +244,7 @@ def run(
         subtract_background: bool = True,
         verbose: bool = False,
         qc: bool = False):
+
     # Initialize the log list
     image_log = []
     image_log.append(f" ")
@@ -460,53 +487,57 @@ def run(
     )
 
     # Since the strip is sometimes placed facing the wrong direction
-    # in the box, we will try a couple of approaches to determine
-    # whether we should rotate it 180 degrees.
+    # in the box, we will try (if the user requested it, that is) a
+    # couple of approaches to determine whether we should rotate it
+    # 180 degrees.
 
-    # Use the Hough transform to look for expected details in the
-    # strip.
-    strip_gray_for_analysis, strip_for_analysis, qc_image, was_rotated = \
-        use_hough_transform_to_rotate_strip_if_needed(
-            strip_gray_for_analysis,
-            strip_for_analysis,
-            qc=qc
+    if strip_try_correct_orientation:
+        # Use the Hough transform to look for expected details in the
+        # strip.
+        strip_gray_for_analysis, strip_for_analysis, qc_image, was_rotated, _, _ = \
+            use_hough_transform_to_rotate_strip_if_needed(
+                strip_gray_for_analysis,
+                strip_try_correct_orientation_rects,
+                strip_for_analysis,
+                qc=qc
+            )
+
+        # Inform
+        image_log.append(f"File {filename}: the image {'was' if was_rotated else 'was not'} rotated "
+                         f"based on Hough transform analysis.")
+
+        # If requested, save the quality control image
+        create_quality_control_images(
+            str(results_folder_path),
+            filename.replace('.', '_'),
+            {
+                "strip_gray_hough_analysis_candidates": qc_image,
+                "strip_gray_hough_analysis": strip_gray_for_analysis
+            }
         )
-
-    # Inform
-    image_log.append(f"File {filename}: the image {'was' if was_rotated else 'was not'} rotated "
-                     f"based on Hough transform analysis.")
-
-    # If requested, save the quality control image
-    create_quality_control_images(
-        str(results_folder_path),
-        filename.replace('.', '_'),
-        {
-            "strip_gray_hough_analysis_candidates": qc_image,
-            "strip_gray_hough_analysis": strip_gray_for_analysis
-        }
-    )
 
     # Use tesseract to find expected text from the strip.
-    strip_gray_for_analysis, strip_for_analysis, was_rotated = \
-        use_ocr_to_rotate_strip_if_needed(
-            strip_gray_for_analysis,
-            strip_for_analysis,
-            strip_text_to_search,
-            strip_text_on_right
+    if strip_text_to_search != "":
+        strip_gray_for_analysis, strip_for_analysis, was_rotated = \
+            use_ocr_to_rotate_strip_if_needed(
+                strip_gray_for_analysis,
+                strip_for_analysis,
+                strip_text_to_search,
+                strip_text_on_right
+            )
+
+        # Inform
+        image_log.append(f"File {filename}: the image {'was' if was_rotated else 'was not'} rotated "
+                         f"based on OCR analysis.")
+
+        # Save the (aligned) strip image
+        create_quality_control_images(
+            str(results_folder_path),
+            filename.replace('.', '_'),
+            {
+                "strip_gray_OCR_analysis": strip_gray_for_analysis
+            }
         )
-
-    # Inform
-    image_log.append(f"File {filename}: the image {'was' if was_rotated else 'was not'} rotated "
-                     f"based on OCR analysis.")
-
-    # Always save the (aligned) strip image
-    create_quality_control_images(
-        str(results_folder_path),
-        filename.replace('.', '_'),
-        {
-            "strip_gray_OCR_analysis": strip_gray_for_analysis
-        }
-    )
 
     if perform_sensor_search:
 

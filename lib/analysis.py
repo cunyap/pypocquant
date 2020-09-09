@@ -1639,11 +1639,33 @@ def point_in_rect(point, rect):
     return False
 
 
-def use_hough_transform_to_rotate_strip_if_needed(img_gray, img=None, qc=False):
+def use_hough_transform_to_rotate_strip_if_needed(
+        img_gray,
+        rectangle_props=(0.52, 0.15, 0.09),
+        img=None,
+        qc=False
+    ):
     """Estimate the orientation of the strip looking at features in the area around the
     expected sensor position. If the orientation is estimated to be wrong, rotate the strip.
 
-    We apply the same rotation also to the second image, if passed.
+    :param img_gray: np.ndarray
+        Gray-scale image to be analyzed.
+
+    :param rectangle_props: tuple
+        Tuple containing information about the relative position of the two rectangles
+        to be searched for the inlet on both sides of the center of the image:
+             rectangle_props[0]: relative (0..1) vertical height of the rectangle with
+                                 respect to the image height.
+             rectangle_props[1]: relative distance of the left edge of the right rectangle
+                                 with respect to the center of the image.
+             rectangle_props[2]: relative distance of the left edge of the left rectangle
+                                 with respect to the center of the image.
+
+    :param img: np.ndarray or None (default)
+        Apply correction also to this image, if passed.
+
+    :param qc: bool
+        If True, create quality control images.
     """
 
     # Initialize quality control image if needed
@@ -1659,9 +1681,9 @@ def use_hough_transform_to_rotate_strip_if_needed(img_gray, img=None, qc=False):
     is_right = 0
 
     # Define shape of search rectangles
-    height_factor = 0.52
-    center_cut_off = round(0.15 * img_gray.shape[1])
-    border_cut_off = round(0.09 * img_gray.shape[1])
+    height_factor = rectangle_props[0]
+    center_cut_off = round(rectangle_props[1] * img_gray.shape[1])
+    border_cut_off = round(rectangle_props[2] * img_gray.shape[1])
     left_rect = [
         border_cut_off,
         round(img_gray.shape[0] / 2 - ((img_gray.shape[0] * height_factor) / 2)),
@@ -1751,7 +1773,7 @@ def use_hough_transform_to_rotate_strip_if_needed(img_gray, img=None, qc=False):
         if img is not None:
             img = rotate(img, 180)
 
-    return img_gray, img, qc_image, rotated
+    return img_gray, img, qc_image, rotated, left_rect, right_rect
 
 
 def use_ocr_to_rotate_strip_if_needed(img_gray, img=None, text="COVID", on_right=True):

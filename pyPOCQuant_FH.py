@@ -74,6 +74,8 @@ if __name__ == '__main__':
     DEFAULT_PARAMETERS = {
         "raw_auto_stretch": False,
         "raw_auto_wb": False,
+        "strip_try_correct_orientation": True,
+        "strip_try_correct_orientation_rects": (0.52, 0.15, 0.09),
         "strip_text_to_search": "COVID",
         "strip_text_on_right": True,
         "strip_size": None,
@@ -87,8 +89,7 @@ if __name__ == '__main__':
         "sensor_search_area": (71, 259),
         "peak_expected_relative_location": (0.25, 0.53, 0.79),
         "verbose": True,
-        "qc": True,
-        "max_workers": None
+        "qc": True
     }
 
     # Create default settings file?
@@ -154,25 +155,27 @@ if __name__ == '__main__':
     # Inform
     print(f"")
     print(f"Starting analysis with parameters:")
-    print(f"                               Input: {input_folder_path}")
-    print(f"                              Output: {results_folder_path}")
-    print(f"                       Settings file: {Path(settings_file).resolve()}")
-    print(f"                   Number of workers: {max_workers}")
-    print(f"        RAW auto stretch intensities: {settings['raw_auto_stretch']}")
-    print(f"        RAW apply auto white balance: {settings['raw_auto_wb']}")
-    print(f"  Strip text to search (orientation): {settings['strip_text_to_search']}")
-    print(f"          Strip text is on the right: {settings['strip_text_on_right']}")
-    print(f"                      QR code border: {settings['qr_code_border']}")
-    print(f"               Perform sensor search: {settings['perform_sensor_search']}")
-    print(f"                         Sensor size: {settings['sensor_size']}")
-    print(f"                       Sensor center: {settings['sensor_center']}")
-    print(f"                  Sensor search area: {settings['sensor_search_area']}")
-    print(f"             Sensor threshold factor: {settings['sensor_thresh_factor']}")
-    print(f"                       Sensor border: {settings['sensor_border']}")
-    print(f"    Expected peak relative positions: {settings['peak_expected_relative_location']}")
-    print(f"          Subtract signal background: {settings['subtract_background']}")
-    print(f"                      Verbose output: {settings['verbose']}")
-    print(f"      Create quality-control figures: {settings['qc']}")
+    print(f"                                  Input: {input_folder_path}")
+    print(f"                                 Output: {results_folder_path}")
+    print(f"                          Settings file: {Path(settings_file).resolve()}")
+    print(f"                      Number of workers: {max_workers}")
+    print(f"           RAW auto stretch intensities: {settings['raw_auto_stretch']}")
+    print(f"           RAW apply auto white balance: {settings['raw_auto_wb']}")
+    print(f"   Try to correct for strip orientation: {settings['strip_try_correct_orientation']}")
+    print(f" Strip orientation rectangle properties: {settings['strip_try_correct_orientation_rects']}")
+    print(f"     Strip text to search (orientation): {settings['strip_text_to_search']}")
+    print(f"             Strip text is on the right: {settings['strip_text_on_right']}")
+    print(f"                         QR code border: {settings['qr_code_border']}")
+    print(f"                  Perform sensor search: {settings['perform_sensor_search']}")
+    print(f"                            Sensor size: {settings['sensor_size']}")
+    print(f"                          Sensor center: {settings['sensor_center']}")
+    print(f"                     Sensor search area: {settings['sensor_search_area']}")
+    print(f"                Sensor threshold factor: {settings['sensor_thresh_factor']}")
+    print(f"                          Sensor border: {settings['sensor_border']}")
+    print(f"       Expected peak relative positions: {settings['peak_expected_relative_location']}")
+    print(f"             Subtract signal background: {settings['subtract_background']}")
+    print(f"                         Verbose output: {settings['verbose']}")
+    print(f"         Create quality-control figures: {settings['qc']}")
     print(f"")
 
     # Run the pipeline
@@ -181,9 +184,11 @@ if __name__ == '__main__':
         results_folder_path,
         raw_auto_stretch=settings['raw_auto_stretch'],
         raw_auto_wb=settings['raw_auto_wb'],
+        strip_try_correct_orientation=settings['strip_try_correct_orientation'],
+        strip_try_correct_orientation_rects=settings['strip_try_correct_orientation_rects'],
         strip_text_to_search=settings['strip_text_to_search'],
         strip_text_on_right=settings['strip_text_on_right'],
-        min_sensor_score=settings['min_sensor_score'],
+        min_sensor_score=0.0,   # This is currently ignored
         qr_code_border=settings['qr_code_border'],
         perform_sensor_search=settings['perform_sensor_search'],
         sensor_size=settings['sensor_size'],
