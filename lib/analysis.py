@@ -1676,10 +1676,6 @@ def use_hough_transform_to_rotate_strip_if_needed(
         else:
             qc_image = cv2.cvtColor(img_gray.copy(), cv2.COLOR_GRAY2RGB)
 
-    # Initialize counters
-    is_left = 0
-    is_right = 0
-
     # Define shape of search rectangles
     height_factor = rectangle_props[0]
     center_cut_off = round(rectangle_props[1] * img_gray.shape[1])
@@ -1719,6 +1715,31 @@ def use_hough_transform_to_rotate_strip_if_needed(
     # Were there any circles found?
     if circles is not None:
 
+        # Calculate and store the coordinates of the centers of
+        # the left and right rectangles
+        left_rect_center = (
+            left_rect[0] + 0.5 * left_rect[2],
+            left_rect[1] + 0.5 * left_rect[3]
+        )
+        right_rect_center = (
+            right_rect[0] + 0.5 * right_rect[2],
+            right_rect[1] + 0.5 * right_rect[3]
+        )
+
+        # Distances will be normalized to half diagonal distance inside the rectangle
+        norm_left_rect_dist = np.sqrt(
+            0.5 * left_rect[2] * 0.5 * left_rect[2] +
+            0.5 * left_rect[3] * 0.5 * left_rect[3]
+        )
+        norm_right_rect_dist = np.sqrt(
+            0.5 * right_rect[2] * 0.5 * right_rect[2] +
+            0.5 * right_rect[3] * 0.5 * right_rect[3]
+        )
+
+        # Build a weighed vote for both sides
+        weighed_vote_left = 0.0
+        weighed_vote_right = 0.0
+
         # Process the circles
         circles = np.uint16(np.around(circles))
         num_best_circles = 15
@@ -1731,12 +1752,24 @@ def use_hough_transform_to_rotate_strip_if_needed(
             # Count in left region
             ret_left = point_in_rect([center_x, center_y], left_rect)
             if ret_left:
-                is_left = is_left + 1
+
+                # Calculate weighted distance (1.0 - normalized distance)
+                # and add it as a weight
+                dx_l = center_x - left_rect_center[0]
+                dy_l = center_y - left_rect_center[1]
+                w_l = 1.0 - (np.sqrt(dx_l * dx_l + dy_l * dy_l) / norm_left_rect_dist)
+                weighed_vote_left += w_l
 
             # Count in right region
             ret_right = point_in_rect([center_x, center_y], right_rect)
             if ret_right:
-                is_right = is_right + 1
+
+                # Calculate weighted distance (1.0 - normalized distance)
+                # and add it as a weight
+                dx_r = center_x - right_rect_center[0]
+                dy_r = center_y - right_rect_center[1]
+                w_r = 1.0 - (np.sqrt(dx_r * dx_r + dy_r * dy_r) / norm_right_rect_dist)
+                weighed_vote_right += w_r
 
             if qc:
                 if ret_left or ret_right:
@@ -1753,21 +1786,21 @@ def use_hough_transform_to_rotate_strip_if_needed(
             qc_image,
             (left_rect[0], left_rect[1]),
             (left_rect[2] + left_rect[0], left_rect[3] + left_rect[1]),
-            (0, 0, 255) if is_left >= is_right else (255, 255, 255),
+            (0, 0, 255) if weighed_vote_left >= weighed_vote_right else (255, 255, 255),
             2
         )
         cv2.rectangle(
             qc_image,
             (right_rect[0], right_rect[1]),
             (right_rect[2] + right_rect[0], right_rect[3] + right_rect[1]),
-            (0, 0, 255) if is_left < is_right else (255, 255, 255),
+            (0, 0, 255) if weighed_vote_left < weighed_vote_right else (255, 255, 255),
             2
         )
 
     # The condition for rotation is that there are more circles
     # in the search rectangle on the right than on the left
     rotated = False
-    if is_right > is_left:
+    if weighed_vote_right > weighed_vote_left:
         rotated = True
         img_gray = rotate(img_gray, 180)
         if img is not None:
