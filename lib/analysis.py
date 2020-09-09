@@ -1639,6 +1639,49 @@ def point_in_rect(point, rect):
     return False
 
 
+def get_rectangles_from_image_and_rectangle_props(
+        img_shape,
+        rectangle_props=(0.52, 0.15, 0.09)
+    ):
+    """Calculate the left and right rectangles to be used for the orientation
+    analysis using the Hough transform.
+
+    :param img_shape: tuple
+    Image shape (width, height)
+
+    :param rectangle_props: tuple
+        Tuple containing information about the relative position of the two rectangles
+        to be searched for the inlet on both sides of the center of the image:
+             rectangle_props[0]: relative (0..1) vertical height of the rectangle with
+                                 respect to the image height.
+             rectangle_props[1]: relative distance of the left edge of the right rectangle
+                                 with respect to the center of the image.
+             rectangle_props[2]: relative distance of the left edge of the left rectangle
+                                 with respect to the center of the image.
+
+    :return Tuple containing left and right rectangles
+    """
+
+    # Define shape of search rectangles
+    height_factor = rectangle_props[0]
+    center_cut_off = round(rectangle_props[1] * img_shape[1])
+    border_cut_off = round(rectangle_props[2] * img_shape[1])
+    left_rect = [
+        border_cut_off,
+        round(img_shape[0] / 2 - ((img_shape[0] * height_factor) / 2)),
+        round(img_shape[1] / 2) - center_cut_off-border_cut_off,
+        round(img_shape[0] * height_factor)
+    ]
+    right_rect = [
+        round(img_shape[1] / 2) + center_cut_off,
+        round(img_shape[0] / 2 - ((img_shape[0] * height_factor) / 2)),
+        round(img_shape[1] / 2) - center_cut_off-border_cut_off,
+        round(img_shape[0] * height_factor)
+    ]
+
+    return left_rect, right_rect
+
+
 def use_hough_transform_to_rotate_strip_if_needed(
         img_gray,
         rectangle_props=(0.52, 0.15, 0.09),
@@ -1676,29 +1719,26 @@ def use_hough_transform_to_rotate_strip_if_needed(
         else:
             qc_image = cv2.cvtColor(img_gray.copy(), cv2.COLOR_GRAY2RGB)
 
-    # Define shape of search rectangles
-    height_factor = rectangle_props[0]
-    center_cut_off = round(rectangle_props[1] * img_gray.shape[1])
-    border_cut_off = round(rectangle_props[2] * img_gray.shape[1])
-    left_rect = [
-        border_cut_off,
-        round(img_gray.shape[0] / 2 - ((img_gray.shape[0] * height_factor) / 2)),
-        round(img_gray.shape[1] / 2) - center_cut_off-border_cut_off,
-        round(img_gray.shape[0] * height_factor)
-    ]
-    right_rect = [
-        round(img_gray.shape[1] / 2) + center_cut_off,
-        round(img_gray.shape[0] / 2 - ((img_gray.shape[0] * height_factor) / 2)),
-        round(img_gray.shape[1] / 2) - center_cut_off-border_cut_off,
-        round(img_gray.shape[0] * height_factor)
-    ]
+    # Get search rectangles
+    left_rect, right_rect = get_rectangles_from_image_and_rectangle_props(
+        img_gray.shape,
+        rectangle_props
+    )
 
     # Pre-process the image to make the detection of circles more robust
-    img_work = img_gray.copy()
-    img_work = cv2.medianBlur(img_work, 13)
-    img_work = cv2.Laplacian(img_work, cv2.CV_8UC1, ksize=5)
-    img_work = cv2.dilate(img_work, (3, 3))
-    img_work = cv2.bilateralFilter(img_work, 5, 9, 9)
+    try:
+        img_work = img_gray.copy()
+        img_work = cv2.medianBlur(img_work, 13)
+        img_work = cv2.Laplacian(img_work, cv2.CV_8UC1, ksize=5)
+        img_work = cv2.dilate(img_work, (3, 3))
+        img_work = cv2.bilateralFilter(img_work, 5, 9, 9)
+
+    except Exception:
+        # If something went wrong, return the original images
+        return img_gray, img, qc_image, False, left_rect, right_rect
+
+    min_radius = int(0.15 * img_gray.shape[0] * rectangle_props[0])
+    max_radius = int(0.30 * img_gray.shape[0] * rectangle_props[0])
 
     # Find circles
     circles = cv2.HoughCircles(
@@ -1708,9 +1748,13 @@ def use_hough_transform_to_rotate_strip_if_needed(
         1,
         param1=100,
         param2=20,
-        minRadius=20,
-        maxRadius=35
+        minRadius=min_radius,
+        maxRadius=max_radius
     )
+
+    # Build a weighed vote for both sides
+    weighed_vote_left = 0.0
+    weighed_vote_right = 0.0
 
     # Were there any circles found?
     if circles is not None:
@@ -1736,13 +1780,9 @@ def use_hough_transform_to_rotate_strip_if_needed(
             0.5 * right_rect[3] * 0.5 * right_rect[3]
         )
 
-        # Build a weighed vote for both sides
-        weighed_vote_left = 0.0
-        weighed_vote_right = 0.0
-
         # Process the circles
         circles = np.uint16(np.around(circles))
-        num_best_circles = 15
+        num_best_circles = 30
         c = 0
         for centers in circles[0, :]:
 
@@ -1779,7 +1819,14 @@ def use_hough_transform_to_rotate_strip_if_needed(
 
             c += 1
             if c >= (num_best_circles - 1):
-                break
+                if weighed_vote_left >= 0 or weighed_vote_right >= 0:
+                    break
+                else:
+                    # If we still haven't found anything, let's try one more. We will stop
+                    # as soon as we find one circle in one of the rectangles, or we run out
+                    # of circles.
+                    c -= 1
+
     if qc:
         # Add search rectangles to image (the winning one is in red)
         cv2.rectangle(
