@@ -14,7 +14,8 @@ from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement
     read_patient_data_by_ocr, use_hough_transform_to_rotate_strip_if_needed
 from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barcode_data_fh, \
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
-    align_box_with_image_border_fh
+    align_box_with_image_border_fh, try_getting_fid_from_code128_barcode, detect, read_FID_from_barcode_image, \
+    pick_FID_from_candidates
 from pypocquant.lib.consts import Issue
 from pypocquant.lib.io import load_and_process_image
 from pypocquant.lib.processing import BGR2Gray
@@ -433,7 +434,13 @@ def run(
             extension=".jpg",
             quality=85
         )
-    # If we could not find a valid FID, we try to run OCR in a region
+
+    # If we could not find a valid FID, we try to look for code128 barcodes
+    # (previous version of pyPOCQuant)
+    if fid == "":
+        fid = try_getting_fid_from_code128_barcode(barcode_data)
+
+    # If we still could not find a valid FID, we try to run OCR in a region
     # a bit larger than the box (in y direction).
     if fid == "":
         box_start_y = box_rect[0] - 600
@@ -446,6 +453,15 @@ def run(
         fid, new_manufacturer = read_patient_data_by_ocr(area_for_ocr)
         if manufacturer == "" and new_manufacturer != "":
             manufacturer = new_manufacturer
+
+    # Last attempt, try to segment a barcode the old way
+    if fid == "":
+        # Extract the barcode
+        barcode_img, _, _, _ = detect(image)
+        if barcode_img is not None:
+            # Decode the barcode and read the numeric FID
+            fid_tesseract, fid_pyzbar, _ = read_FID_from_barcode_image(barcode_img)
+            fid = pick_FID_from_candidates(fid_pyzbar, fid_tesseract)
 
     results_row["fid"] = fid
     results_row["manufacturer"] = manufacturer

@@ -772,6 +772,15 @@ def try_extracting_barcode_with_linear_stretch(image, lower_bound_range=(25,), u
     return "", gray
 
 
+def try_getting_fid_from_code128_barcode(barcode_data):
+    """Try finding a CODE 128 barcode in barcode data that should contain the patient FID."""
+
+    for barcode in barcode_data:
+        if barcode.symbol == "CODE128":
+            return barcode.data.decode("utf-8")
+    return ""
+
+
 def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
         image,
         lower_bound_range=(0, 5, 15, 25, 35),
@@ -817,7 +826,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 stretched_gray = exposure.rescale_intensity(gray_process, in_range=(pLb, pUb))
 
                 # Run the barcode detection
-                barcode_data = decode(stretched_gray, [ZBarSymbol.QRCODE])
+                barcode_data = decode(stretched_gray, SymbolTypes.TYPES.value)
 
                 # Are all QR codes and barcodes found successfully?
                 for barcode in barcode_data:
