@@ -306,7 +306,7 @@ def run(
     results_row["basename"] = basename
 
     # Find the location of the barcodes
-    barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor = \
+    barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor, fid_128 = \
         try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
             image,
             lower_bound_range=(0, 5, 15, 25, 35),
@@ -354,7 +354,7 @@ def run(
     # we fall back to the previous values.
     if image_was_rotated:
         barcode_data, new_fid, new_manufacturer, new_plate, new_well, new_user, new_best_lb, \
-        new_best_ub, new_best_score, new_best_scaling_factor = \
+        new_best_ub, new_best_score, new_best_scaling_factor, new_fid_128 = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
@@ -366,6 +366,13 @@ def run(
         plate = new_plate if plate == "" and new_plate != "" else plate
         well = new_well if well == "" and new_well != "" else well
         user = new_user if user == "" and new_user != "" else user
+
+        # If we did not find the FID from the QRCODE data, did we find it with the
+        # fallback CODE128 barcode?
+        if fid == "" and fid_128 != "":
+            fid = fid_128
+        if fid == "" and new_fid_128 != "":
+            fid = new_fid_128
 
         # Inform
         if verbose:
@@ -399,7 +406,7 @@ def run(
 
     # In case there was still a significant rotation, find the location of the barcodes yet again
     if abs(box_rotation_angle) > 0.5:
-        barcode_data, _, _, _, _, _, _, _, best_score, _ = \
+        barcode_data, _, _, _, _, _, _, _, best_score, _, fid_128 = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
@@ -438,7 +445,10 @@ def run(
     # If we could not find a valid FID, we try to look for code128 barcodes
     # (previous version of pyPOCQuant)
     if fid == "":
-        fid = try_getting_fid_from_code128_barcode(barcode_data)
+        if fid_128 != "":
+            fid = fid_128
+        else:
+            fid = try_getting_fid_from_code128_barcode(barcode_data)
 
     # If we still could not find a valid FID, we try to run OCR in a region
     # a bit larger than the box (in y direction).

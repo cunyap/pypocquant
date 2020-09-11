@@ -803,6 +803,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
     plate = ""
     well = ""
     user = ""
+    fid_128 = ""   # Backward-compatibility with old barcode-based FID
 
     for scaling_factor in scaling:
 
@@ -863,6 +864,12 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                                 well = match.group('well')
                                 user = match.group('user')
                                 score += 1
+
+                    elif barcode.type == "CODE128":
+                        tmp = barcode.data.decode("utf-8")
+                        if fid_128 == "" and tmp != "":
+                            fid_128 = tmp
+
                     else:
                         print(f"Unexpected barcode type {barcode.type}.")
 
@@ -878,7 +885,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                         except:
                             pass
 
-                    return barcodes, fid, manufacturer, plate, well, user, lb, ub, score, scaling_factor
+                    return barcodes, fid, manufacturer, plate, well, user, lb, ub, score, scaling_factor, fid_128
 
                 else:
                     if score > best_score:
@@ -899,7 +906,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
         except:
             pass
 
-    return barcodes, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor
+    return barcodes, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor, fid_128
 
 
 def try_extracting_all_barcodes_with_linear_stretch(
