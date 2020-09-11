@@ -311,7 +311,7 @@ def run(
             image,
             lower_bound_range=(0, 5, 15, 25, 35),
             upper_bound_range=(100, 98, 95, 92, 89),
-            scaling=(0.25, 0.5)
+            scaling=(0.25, 0.5, 1.0)
         )
 
     # Inform
@@ -359,7 +359,7 @@ def run(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
                 upper_bound_range=(100, 98, 95, 92, 89),
-                scaling=(0.25, 0.5)
+                scaling=(0.25, 0.5, 1.0)
             )
         fid = new_fid if fid == "" and new_fid != "" else fid
         manufacturer = new_manufacturer if manufacturer == "" and new_manufacturer != "" else manufacturer
@@ -411,7 +411,7 @@ def run(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
                 upper_bound_range=(100, 98, 95, 92, 89),
-                scaling=(0.25, 0.5)
+                scaling=(0.25, 0.5, 1.0)
             )
 
     # Find location of the strip box from the barcode data
