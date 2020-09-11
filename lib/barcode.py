@@ -426,7 +426,8 @@ def read_FID_from_barcode_image(image):
     # Use pyzbar to decode the barcode
     decoded_objects = decode(image, SymbolTypes.TYPES.value)
     for obj in decoded_objects:
-        fid_pyzbar = obj.data.decode("utf-8")
+        if obj.type == "CODE128":
+            fid_pyzbar = obj.data.decode("utf-8")
 
     # Give a score to the extraction (max is 3)
     if fid_tesseract == "" and fid_pyzbar == "":
