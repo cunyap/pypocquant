@@ -464,14 +464,15 @@ def run(
         if manufacturer == "" and new_manufacturer != "":
             manufacturer = new_manufacturer
 
-    # Last attempt, try to segment a barcode the old way
+    # Last attempt, try to segment a barcode the old way.
+    # We focus on the strip box only.
     if fid == "":
         # Extract the barcode
-        barcode_img, _, _, _ = detect(image)
+        barcode_img, _, _, _ = detect(box)
         if barcode_img is not None:
             # Decode the barcode and read the numeric FID
             fid_tesseract, fid_pyzbar, _ = read_FID_from_barcode_image(barcode_img)
-            fid = pick_FID_from_candidates(fid_pyzbar, fid_tesseract)
+            fid, _ = pick_FID_from_candidates(fid_pyzbar, fid_tesseract)
 
     results_row["fid"] = fid
     results_row["manufacturer"] = manufacturer
