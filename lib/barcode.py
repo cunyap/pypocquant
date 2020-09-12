@@ -700,7 +700,7 @@ def find_strip_box_from_barcode_data(image, barcode_data, qr_code_border=30, qr_
             else:
                 print(f"Unexpected QR code with data {barcode.data.decode('utf-8')}.")
 
-        elif barcode.type == "CODE128":
+        elif barcode.type == "CODE128" or barcode.type == "CODE39":
 
             # Return the (x) coordinate of the left edge of the barcode rectangle.
             # We can use this to crop it away or mask it for alignment later.
@@ -779,6 +779,19 @@ def try_getting_fid_from_code128_barcode(barcode_data):
         if barcode.symbol == "CODE128":
             return barcode.data.decode("utf-8")
     return ""
+
+
+def try_get_fid_from_rgb(image):
+    barcode_data = decode(image, SymbolTypes.TYPES.value)
+
+    # return "" if no barcode or of wrong type was detected
+    fid = ""
+    for barcode in barcode_data:
+        if barcode.type == "CODE128" or barcode.type == "CODE39":
+            tmp = barcode.data.decode("utf-8")
+            if tmp != "":
+                fid = tmp
+    return fid
 
 
 def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
@@ -865,7 +878,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                                 user = match.group('user')
                                 score += 1
 
-                    elif barcode.type == "CODE128":
+                    elif barcode.type == "CODE128" or barcode.type == 'CODE39':
                         tmp = barcode.data.decode("utf-8")
                         if fid_128 == "" and tmp != "":
                             fid_128 = tmp
@@ -958,7 +971,7 @@ def try_extracting_all_barcodes_with_linear_stretch(
                         result[TL_P] = True
                     else:
                         print(f"Unexpected QR code with data {barcode.data.decode('utf-8')}.")
-                elif barcode.type == "CODE128":
+                elif barcode.type == "CODE128" or barcode.type == "CODE39":
                     # Let's check if the FID was read
                     if barcode.data.decode("utf-8") != "":
                         result[FID] = True

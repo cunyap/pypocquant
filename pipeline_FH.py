@@ -15,7 +15,7 @@ from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement
 from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barcode_data_fh, \
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
     align_box_with_image_border_fh, try_getting_fid_from_code128_barcode, detect, read_FID_from_barcode_image, \
-    pick_FID_from_candidates
+    pick_FID_from_candidates, try_get_fid_from_rgb
 from pypocquant.lib.consts import Issue
 from pypocquant.lib.io import load_and_process_image
 from pypocquant.lib.processing import BGR2Gray
@@ -374,6 +374,8 @@ def run(
         if fid == "" and new_fid_128 != "":
             fid = new_fid_128
 
+        image_log.append(f"Detected FIDs for rotated image: {fid} {new_fid} {fid_128} {new_fid_128}")
+
         # Inform
         if verbose:
             image_log.append(
@@ -441,14 +443,19 @@ def run(
             extension=".jpg",
             quality=85
         )
-
+    image_log.append(f"Detected FIDs after trying harder: {fid} {fid_128}")
     # If we could not find a valid FID, we try to look for code128 barcodes
     # (previous version of pyPOCQuant)
     if fid == "":
         if fid_128 != "":
             fid = fid_128
         else:
-            fid = try_getting_fid_from_code128_barcode(barcode_data)
+            # @todo should be tested as first thing. And if it fails we continue with the rest.
+            # Currently all the histogram streching seams to have no effect on the grey scale image!
+            # Can be added here try_extracting_fid_and_all_barcodes_with_linear_stretch_fh or after rotation
+            fid = try_get_fid_from_rgb(image)
+        # else:
+        #     fid = try_getting_fid_from_code128_barcode(barcode_data)
 
     # If we still could not find a valid FID, we try to run OCR in a region
     # a bit larger than the box (in y direction).
