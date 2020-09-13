@@ -48,7 +48,7 @@ def extract_strip(image,
     """
 
     # Find the location of the barcodes
-    barcode_data, _, _, _, _, _, _, _, best_score, _ = \
+    barcode_data, _, _, _, _, _, _, _, best_score, _, _ = \
         try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
             image,
             lower_bound_range=(0, 5, 15, 25, 35),
@@ -76,7 +76,7 @@ def extract_strip(image,
     # Also, if we managed to extract patient data last time and we fail this time
     # we fall back to the previous values.
     if image_was_rotated:
-        barcode_data, _, _, _, _, _, _, _, _, _ = \
+        barcode_data, _, _, _, _, _, _, _, _, _, _ = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
@@ -89,7 +89,7 @@ def extract_strip(image,
 
     # In case there was still a significant rotation, find the location of the barcodes yet again
     if abs(box_rotation_angle) > 0.5:
-        barcode_data, _, _, _, _, _, _, _, best_score, _ = \
+        barcode_data, _, _, _, _, _, _, _, best_score, _, _ = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
