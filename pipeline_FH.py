@@ -3,10 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 
-import cv2
 import matplotlib.pyplot as plt
 import pandas as pd
-import rawpy
 from tqdm import tqdm
 
 from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement_window, \
@@ -14,8 +12,7 @@ from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement
     read_patient_data_by_ocr, use_hough_transform_to_rotate_strip_if_needed
 from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barcode_data_fh, \
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
-    align_box_with_image_border_fh, try_getting_fid_from_code128_barcode, detect, read_FID_from_barcode_image, \
-    pick_FID_from_candidates, try_get_fid_from_rgb
+    align_box_with_image_border_fh, try_get_fid_from_rgb, try_extracting_barcode_from_box_with_rotations
 from pypocquant.lib.consts import Issue
 from pypocquant.lib.io import load_and_process_image
 from pypocquant.lib.processing import BGR2Gray
@@ -443,22 +440,17 @@ def run(
             extension=".jpg",
             quality=85
         )
-    image_log.append(f"Detected FIDs after trying harder: {fid} {fid_128}")
     # If we could not find a valid FID, we try to look for code128 barcodes
     # (previous version of pyPOCQuant)
     if fid == "":
         if fid_128 != "":
             fid = fid_128
         else:
-            # @todo should be tested as first thing. And if it fails we continue with the rest.
-            # Currently all the histogram streching seams to have no effect on the grey scale image!
-            # Can be added here try_extracting_fid_and_all_barcodes_with_linear_stretch_fh or after rotation
             fid = try_get_fid_from_rgb(image)
-        # else:
-        #     fid = try_getting_fid_from_code128_barcode(barcode_data)
 
     # If we still could not find a valid FID, we try to run OCR in a region
-    # a bit larger than the box (in y direction).
+    # a bit larger than the box (in y direction). Some images had a label with
+    # the FID attached above the strip box.
     if fid == "":
         box_start_y = box_rect[0] - 600
         if box_start_y < 0:
@@ -471,15 +463,18 @@ def run(
         if manufacturer == "" and new_manufacturer != "":
             manufacturer = new_manufacturer
 
-    # Last attempt, try to segment a barcode the old way.
-    # We focus on the strip box only.
+    # Last attempt, look for the barcode attached to the strip (we use the
+    # whole box anyway). If this works, however, we will only find the FID
+    # and no information about the manufacturer. (This is a fallback for old
+    # images coming from a previous study.)
     if fid == "":
         # Extract the barcode
-        barcode_img, _, _, _ = detect(box)
-        if barcode_img is not None:
-            # Decode the barcode and read the numeric FID
-            fid_tesseract, fid_pyzbar, _ = read_FID_from_barcode_image(barcode_img)
-            fid, _ = pick_FID_from_candidates(fid_pyzbar, fid_tesseract)
+        fid, image_log = try_extracting_barcode_from_box_with_rotations(
+            box,
+            scaling=(1.0, 0.5, 0.25),
+            verbose=verbose,
+            log_list=image_log
+        )
 
     results_row["fid"] = fid
     results_row["manufacturer"] = manufacturer

@@ -53,7 +53,7 @@ def extract_strip(image,
             image,
             lower_bound_range=(0, 5, 15, 25, 35),
             upper_bound_range=(100, 98, 95, 92, 89),
-            scaling=(0.25, 0.5)
+            scaling=(0.25, 0.5, 1.0)
         )
 
     # Simple check -- if less than three QR codes were found, we have the guarantee that
@@ -94,7 +94,7 @@ def extract_strip(image,
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
                 upper_bound_range=(100, 98, 95, 92, 89),
-                scaling=(0.25, 0.5)
+                scaling=(0.25, 0.5, 1.0)
             )
 
     # Find location of the strip box from the barcode data
