@@ -473,6 +473,7 @@ def get_fid_from_box_image_using_ocr(box_img):
 
 def try_extracting_barcode_from_box_with_rotations(box, scaling=(1.0, 0.5, 0.25), verbose=False, log_list=None):
 
+    # Switch to RGB
     rgb = cv2.cvtColor(box, cv2.COLOR_BGR2RGB)
 
     fid = ""
@@ -505,25 +506,20 @@ def try_extracting_barcode_from_box_with_rotations(box, scaling=(1.0, 0.5, 0.25)
 
 
 def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, log_list: list=None):
-    # Try with no rotation, if it works we stop.
-    barcode_data = decode(image, SymbolTypes.TYPES.value)
-    fid_pyzbar = get_fid_from_barcode_data(barcode_data)
-    if fid_pyzbar != "":
-        return fid_pyzbar, 0, log_list
 
-    # Use pytesseract to extract the FID
-    results = pytesseract.image_to_data(image, output_type=Output.DICT)
-    n_boxes = len(results['text'])
-    for i in range(n_boxes):
-        fid_tesseract = findall(r'\d{7}', results['text'][i])
-        if fid_tesseract and len(fid_tesseract) == 1:
-            fid_tesseract = fid_tesseract[0]
-            return fid_tesseract, 0, log_list
+    # Prepare the list of angles to try (build a generator)
+    angles = (x // 2 if x % 2 == 1 else -x // 2 for x in range(1, 2 * (angle_range + 1)))
 
-    # Try with a range of rotations
-    for angle in range(1, angle_range + 1):
-        current_pos = rotate(image.copy(), angle)
-        barcode_data = decode(current_pos, SymbolTypes.TYPES.value)
+    for angle in angles:
+
+        # Rotate by the given angle
+        if angle != 0:
+            current = rotate(image.copy(), angle)
+        else:
+            current = image.copy()
+
+        # Use pyzbar
+        barcode_data = decode(current, SymbolTypes.TYPES.value)
         fid_pyzbar = get_fid_from_barcode_data(barcode_data)
         if fid_pyzbar != "":
             if verbose:
@@ -535,7 +531,7 @@ def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, lo
             return fid_pyzbar, angle, log_list
 
         # Use pytesseract to extract the FID
-        results = pytesseract.image_to_data(current_pos, output_type=Output.DICT)
+        results = pytesseract.image_to_data(current, output_type=Output.DICT)
         n_boxes = len(results['text'])
         for i in range(n_boxes):
             fid_tesseract = findall(r'\d{7}', results['text'][i])
@@ -543,34 +539,6 @@ def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, lo
                 fid_tesseract = fid_tesseract[0]
                 if verbose:
                     msg = f"Barcode found by OCR with a rotation of {angle} degrees."
-                    if log_list is None:
-                        print(msg)
-                    else:
-                        log_list.append(msg)
-                return fid_tesseract, 0, log_list
-
-        # Rotate in the other direction
-        current_neg = rotate(image.copy(), -1 * angle)
-        barcode_data = decode(current_neg, SymbolTypes.TYPES.value)
-        fid_pyzbar = get_fid_from_barcode_data(barcode_data)
-        if fid_pyzbar != "":
-            if verbose:
-                msg = f"Barcode found with a rotation of {-angle} degrees."
-                if log_list is None:
-                    print(msg)
-                else:
-                    log_list.append(msg)
-            return fid_pyzbar, angle, log_list
-
-        # Use pytesseract to extract the FID
-        results = pytesseract.image_to_data(current_neg, output_type=Output.DICT)
-        n_boxes = len(results['text'])
-        for i in range(n_boxes):
-            fid_tesseract = findall(r'\d{7}', results['text'][i])
-            if fid_tesseract and len(fid_tesseract) == 1:
-                fid_tesseract = fid_tesseract[0]
-                if verbose:
-                    msg = f"Barcode found by OCR with a rotation of {-angle} degrees."
                     if log_list is None:
                         print(msg)
                     else:
