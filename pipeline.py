@@ -54,7 +54,7 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
     return res, log_list
 
 
-def run_FH(
+def run_pipeline(
         input_folder_path: Path,
         results_folder_path: Path,
         raw_auto_stretch: bool = False,

@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 import sys
 
-from pypocquant.pipeline_FH import run_FH
+from pypocquant.pipeline import run_pipeline
 from pypocquant.lib.settings import load_settings, save_settings
 from pypocquant.lib.utils import set_tesseract_exe
 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     print(f"")
 
     # Run the pipeline
-    run_FH(
+    run_pipeline(
         input_folder_path,
         results_folder_path,
         raw_auto_stretch=settings['raw_auto_stretch'],
