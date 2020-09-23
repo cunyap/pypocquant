@@ -59,17 +59,13 @@ def local_minima(array, min_distance=1):
     return np.array([indices[max_points] for indices in np.indices(array.shape)])
 
 
-def find_peak_bounds(profile, border, peak_index, image_log, verbose=False):
-    profile = np.asarray(profile)
-
-    # Do not go into the border!
-    lowest_bound = border
-    highest_bound = len(profile) - border
+def _find_lower_background(profile: np.ndarray, peak_index: int, lowest_bound: int, max_skip: int = 1):
+    """This method is used by find_peak_bounds() and is not meant to be used as
+    a standalone method."""
 
     # Peak intensity
     peak_intensity = profile[peak_index]
 
-    # Not move away from the peak in both directions until the intensity in under 'relative_intensity'
     current_lower_background = peak_intensity
     n = 0
     current_lower_bound = peak_index - 1
@@ -78,12 +74,22 @@ def find_peak_bounds(profile, border, peak_index, image_log, verbose=False):
             current_lower_background = profile[index]
             current_lower_bound = index
         else:
-            # If any of the next indices (up to a max of three) is lower than
+            # If any of the next indices (up to a max of max_skip) is lower than
             # 'current_background', we still allow them to be picked; to avoid
             # picking a noisy bump instead.
-            if n > 1:
+            if n > max_skip:
                 break
             n += 1
+    d_lower = peak_index - current_lower_bound
+    return current_lower_bound, current_lower_background, d_lower
+
+
+def _find_upper_background(profile: np.ndarray, peak_index: int, highest_bound: int, max_skip: int = 1):
+    """This method is used by find_peak_bounds() and is not meant to be used as
+    a standalone method."""
+
+    # Peak intensity
+    peak_intensity = profile[peak_index]
 
     # On the other side
     current_upper_background = peak_intensity
@@ -94,22 +100,93 @@ def find_peak_bounds(profile, border, peak_index, image_log, verbose=False):
             current_upper_background = profile[index]
             current_upper_bound = index
         else:
-            # If any of the next indices (up to a max of three) is lower than
+            # If any of the next indices (up to a max of max_skip) is lower than
             # 'current_background', we still allow them to be picked; to avoid
             # picking a noisy bump instead.
-            if n > 1:
+            if n > max_skip:
                 break
             n += 1
+    d_upper = current_upper_bound - peak_index
+    return current_upper_bound, current_upper_background, d_upper
+
+
+def find_peak_bounds(profile, border, peak_index, image_log, verbose=False):
+    """Find the lower and upper bounds of current band."""
+
+    profile = np.asarray(profile)
+
+    # Do not go into the border!
+    lowest_bound = border
+    highest_bound = len(profile) - border
+
+    # Peak intensity
+    peak_intensity = profile[peak_index]
+
+    # Not move away from the peak in both directions until the intensity in under 'relative_intensity'
+
+    # First find the lower bound
+    current_lower_bound, current_lower_background, d_lower = _find_lower_background(
+        profile,
+        peak_index,
+        lowest_bound,
+        max_skip=1
+    )
+
+    # Then find the upper bound
+    current_upper_bound, current_upper_background, d_upper = _find_upper_background(
+        profile,
+        peak_index,
+        highest_bound,
+        max_skip=1
+    )
 
     # Now do some quality check on the extracted bounds
-    d_lower = peak_index - current_lower_bound
-    d_upper = current_upper_bound - peak_index
     background = current_lower_background if current_lower_background < current_upper_background else current_upper_background
     i_lower = (current_lower_background - background) / (peak_intensity - background)
     i_upper = (current_upper_background - background) / (peak_intensity - background)
-    band_skewness = d_upper / d_lower
+
+    # Make sure that both i_lower and i_upper are reasonably close to 0; but put
+    # a reasonable cap to the number of attempts to bring it down.
+    # Start with the lower bound.
+    max_skip_lower = 2
+    while i_lower > 0.25 and max_skip_lower <= 5:
+        # Rerun the search for the lower bound
+        current_lower_bound, current_lower_background, d_lower = _find_lower_background(
+            profile,
+            peak_index,
+            lowest_bound,
+            max_skip=max_skip_lower
+        )
+
+        # Update the current bounds
+        background = current_lower_background if current_lower_background < current_upper_background else current_upper_background
+        i_lower = (current_lower_background - background) / (peak_intensity - background)
+
+        # Update max_skip_lower
+        max_skip_lower += 1
+
+    # Make sure that both i_lower and i_upper are reasonably close to 0; but put
+    # a reasonable cap to the number of attempts to bring it down.
+    # Continue with the upper bound.
+    max_skip_upper = 2
+    while i_upper > 0.25 and max_skip_upper <= 5:
+        # Rerun the search for the upper bound
+        current_upper_bound, current_upper_background, d_upper = _find_upper_background(
+            profile,
+            peak_index,
+            highest_bound,
+            max_skip=max_skip_upper
+        )
+
+        # Update the current bounds
+        background = current_lower_background if current_lower_background < current_upper_background else current_upper_background
+        i_upper = (current_upper_background - background) / (peak_intensity - background)
+
+        # Update max_skip_upper
+        max_skip_upper += 1
 
     if verbose:
+        band_skewness = d_upper / d_lower
         image_log.append(f"Peak {peak_index} has lower bound {current_lower_bound} (d = {d_lower}) "
                          f"with relative intensity {i_lower:.2f} and "
                          f"upper bound {current_upper_bound} (d = {d_upper}) with relative intensity {i_upper:.2f}. "
@@ -167,13 +244,14 @@ def estimate_threshold_for_significant_peaks(profile, border_x, thresh_factor):
     md = np.median(new_min_values)
     ma = np.median(np.abs(new_min_values - md))
     peak_threshold = md + thresh_factor * ma
+    lowest_background_threshold = md - thresh_factor * ma
 
     # Keep only the local minima that passed both tests
     loc_min_indices = loc_min_indices[profile[loc_min_indices] < peak_threshold]
     if np.any(profile[loc_min_indices] >= peak_threshold):
         raise Exception("Logical flaw in estimate_threshold_for_significant_peaks().")
 
-    return peak_threshold, loc_min_indices, md
+    return peak_threshold, loc_min_indices, md, lowest_background_threshold
 
 
 def analyze_measurement_window(
@@ -241,10 +319,16 @@ def analyze_measurement_window(
             plt.close(fig)
 
     # Estimate a threshold (on the noisy data) to distinguish noisy candidate peaks from likely correct ones
-    peak_threshold, loc_min_indices, md = estimate_threshold_for_significant_peaks(profile, border_x, thresh_factor)
+    peak_threshold, loc_min_indices, md, lowest_background_threshold = \
+        estimate_threshold_for_significant_peaks(profile, border_x, thresh_factor)
 
     # Low-pass filter the profile
     profile[border_x:-border_x] = gaussian_filter1d(profile[border_x:-border_x], 1)
+
+    # Make sure that no intensities in the profile may be lower than lowest_background_threshold
+    tmp = profile[border_x:-border_x]
+    tmp = np.where(tmp < lowest_background_threshold, lowest_background_threshold, tmp)
+    profile[border_x:-border_x] = tmp
 
     # Find the peaks (add back the border offset)
     peaks = find_peaks(profile[border_x: len(profile) - border_x], width=peak_width)[0] + border_x
