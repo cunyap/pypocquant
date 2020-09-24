@@ -448,22 +448,7 @@ def run(
         else:
             fid = try_get_fid_from_rgb(image)
 
-    # If we still could not find a valid FID, we try to run OCR in a region
-    # a bit larger than the box (in y direction). Some images had a label with
-    # the FID attached above the strip box.
-    if fid == "":
-        box_start_y = box_rect[0] - 600
-        if box_start_y < 0:
-            box_start_y = 0
-        area_for_ocr = image[
-                       box_start_y:box_rect[1],
-                       box_rect[2]:box_rect[3]
-                       ]
-        fid, new_manufacturer = read_patient_data_by_ocr(area_for_ocr)
-        if manufacturer == "" and new_manufacturer != "":
-            manufacturer = new_manufacturer
-
-    # Last attempt, look for the barcode attached to the strip (we use the
+    # Next attempt, look for the barcode attached to the strip (we use the
     # whole box anyway). If this works, however, we will only find the FID
     # and no information about the manufacturer. (This is a fallback for old
     # images coming from a previous study.)
@@ -484,6 +469,21 @@ def run(
     results_row["fid_num"] = get_fid_numeric_value_fh(fid)
     if verbose:
         image_log.append(f"File {filename}: FID = '{fid}'")
+
+    # If we still could not find a valid FID, we try to run OCR in a region
+    # a bit larger than the box (in y direction). Some images had a label with
+    # the FID attached above the strip box.
+    if fid == "":
+        box_start_y = box_rect[0] - 600
+        if box_start_y < 0:
+            box_start_y = 0
+        area_for_ocr = image[
+                       box_start_y:box_rect[1],
+                       box_rect[2]:box_rect[3]
+                       ]
+        fid, new_manufacturer = read_patient_data_by_ocr(area_for_ocr)
+        if manufacturer == "" and new_manufacturer != "":
+            manufacturer = new_manufacturer
 
     # Do we have a valid FID? If we do not have a valid FID,
     # we can still try and continue with the analysis. Some
