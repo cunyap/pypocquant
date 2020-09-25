@@ -29,7 +29,7 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
              perform_sensor_search, sensor_size, sensor_center,
              sensor_search_area, sensor_thresh_factor,
              sensor_border, peak_expected_relative_location,
-             subtract_background, force_fid_search,
+             subtract_background, force_fid_search, sensor_band_names,
              verbose, qc, max_workers=4):
     res = []
     log_list = []
@@ -46,7 +46,9 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
                         sensor_border=sensor_border,
                         peak_expected_relative_location=peak_expected_relative_location,
                         subtract_background=subtract_background,
-                        force_fid_search=force_fid_search, verbose=verbose, qc=qc)
+                        force_fid_search=force_fid_search,
+                        sensor_band_names=sensor_band_names,
+                        verbose=verbose, qc=qc)
         results = list(tqdm(executor.map(run_n, files), total=len(files)))
     for result in results:
         if result is not None:
@@ -76,6 +78,7 @@ def run_pipeline(
         peak_expected_relative_location: tuple = (0.25, 0.53, 0.79),
         subtract_background: bool = True,
         force_fid_search: bool = False,
+        sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
         verbose: bool = False,
         qc: bool = False,
         max_workers: int = 2
@@ -161,6 +164,10 @@ def run_pipeline(
         the image. Only use this if the expected QR code with patient data was not added to
         the image or could not be extracted.
 
+    :param sensor_band_names: tuple
+        Names of the bands for the data frame header. Please notice: the third ([2]) band is
+        always the control band.
+
     :param verbose: bool
         Toggle verbose output.
 
@@ -185,7 +192,8 @@ def run_pipeline(
                                    perform_sensor_search, sensor_size, sensor_center,
                                    sensor_search_area, sensor_thresh_factor, sensor_border,
                                    peak_expected_relative_location, subtract_background,
-                                   force_fid_search, verbose, qc, max_workers=max_workers)
+                                   force_fid_search, sensor_band_names,
+                                   verbose, qc, max_workers=max_workers)
 
     # Save data frame
     data = pd.DataFrame(rows_list)
@@ -218,6 +226,7 @@ def run_pipeline(
             "peak_expected_relative_location": peak_expected_relative_location,
             "subtract_background": subtract_background,
             "force_fid_search": force_fid_search,
+            "sensor_band_names": sensor_band_names,
             "verbose": verbose,
             "qc": qc
         },
@@ -250,8 +259,10 @@ def run(
         peak_expected_relative_location: tuple = (0.27, 0.55, 0.79),
         subtract_background: bool = True,
         force_fid_search: bool = False,
+        sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
         verbose: bool = False,
         qc: bool = False):
+
     # Initialize the log list
     image_log = [f" ", f"File = {filename}"]
 
@@ -276,15 +287,15 @@ def run(
         "manufacturer": "",
         "plate": "",
         "well": "",
-        "ctl": 0,
-        "igm": 0,
-        "igg": 0,
-        "ctl_abs": 0,
-        "igm_abs": 0,
-        "igg_abs": 0,
-        "ctl_ratio": 0,
-        "igm_ratio": 0,
-        "igg_ratio": 0,
+        sensor_band_names[2]: 0,
+        sensor_band_names[0]: 0,
+        sensor_band_names[1]: 0,
+        sensor_band_names[2] + "_abs": 0,
+        sensor_band_names[0] + "_abs": 0,
+        sensor_band_names[1] + "_abs": 0,
+        sensor_band_names[2] + "_ratio": 0,
+        sensor_band_names[0] + "_ratio": 0,
+        sensor_band_names[1] + "_ratio": 0,
         "issue": Issue.NONE.value
     }
 
@@ -453,7 +464,8 @@ def run(
         if fid_128 != "":
             fid = fid_128
         else:
-            fid = try_get_fid_from_rgb(image)
+            if force_fid_search:
+                fid = try_get_fid_from_rgb(image)
 
     # If at this stage we haven't found the FID, and 'force_fid_search' is
     # set to True, we try with a series of fallback attempts to extract it
@@ -650,10 +662,17 @@ def run(
         # The values default to zero, so we do not need to explicitly set them in the
         # corresponding band is missing. If the control band is missing, however, we
         # add flag the issue in the result row.
+
+        #
+        # This is the mapping:
+        #
+        #    * "igm" -> sensor_band_names[0]
+        #    * "igg" -> sensor_band_names[1]
+        #    * "ctl" -> sensor_band_names[2]
         if "ctl" in window_results:
-            results_row["ctl"] = 1
-            results_row["ctl_abs"] = window_results["ctl"]["signal"]
-            results_row["ctl_ratio"] = window_results["ctl"]["normalized_signal"]
+            results_row[sensor_band_names[2]] = 1
+            results_row[sensor_band_names[2] + "_abs"] = window_results["ctl"]["signal"]
+            results_row[sensor_band_names[2] + "_ratio"] = window_results["ctl"]["normalized_signal"]
 
             # Inform
             band_type = "normal" if successful_peak_width == peak_widths[0] else "narrow"
@@ -666,14 +685,14 @@ def run(
             results_row["issue"] = Issue.CONTROL_BAND_MISSING.value
 
         if "igg" in window_results:
-            results_row["igg"] = 1
-            results_row["igg_abs"] = window_results["igg"]["signal"]
-            results_row["igg_ratio"] = window_results["igg"]["normalized_signal"]
+            results_row[sensor_band_names[1]] = 1
+            results_row[sensor_band_names[1] + "_abs"] = window_results["igg"]["signal"]
+            results_row[sensor_band_names[1] + "_ratio"] = window_results["igg"]["normalized_signal"]
 
         if "igm" in window_results:
-            results_row["igm"] = 1
-            results_row["igm_abs"] = window_results["igm"]["signal"]
-            results_row["igm_ratio"] = window_results["igm"]["normalized_signal"]
+            results_row[sensor_band_names[0]] = 1
+            results_row[sensor_band_names[0] + "_abs"] = window_results["igm"]["signal"]
+            results_row[sensor_band_names[0] + "_ratio"] = window_results["igm"]["normalized_signal"]
 
     else:
         # Inform
