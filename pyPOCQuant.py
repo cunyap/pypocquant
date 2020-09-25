@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 import sys
 
-from pypocquant.pipeline_FH import run_FH
+from pypocquant.pipeline import run_pipeline
 from pypocquant.lib.settings import load_settings, save_settings
 from pypocquant.lib.utils import set_tesseract_exe
 
@@ -87,6 +87,8 @@ if __name__ == '__main__':
         "sensor_thresh_factor": 2,
         "sensor_search_area": (71, 259),
         "peak_expected_relative_location": (0.25, 0.53, 0.79),
+        "force_fid_search": False,
+        "sensor_band_names": ('igm', 'igg', 'ctl'),
         "verbose": True,
         "qc": True
     }
@@ -142,9 +144,18 @@ if __name__ == '__main__':
 
     # Make sure that the settings file is usable
     if DEFAULT_PARAMETERS.keys() != settings.keys():
-        print(f"The settings file {settings_file} is not valid.")
-        print(f"Please check the following keys: {str(set(DEFAULT_PARAMETERS.keys()) - set(settings.keys()))}.")
-        sys.exit(1)
+        setKeysDiffA = set(DEFAULT_PARAMETERS.keys()) - set(settings.keys())
+        setKeysDiffB = set(settings.keys()) - set(DEFAULT_PARAMETERS.keys())
+        setKeysDiff = setKeysDiffA.union(setKeysDiffB)
+        if len(setKeysDiff) == 1 and 'max_workers' in setKeysDiff:
+            # This is an acceptable difference. pyPOCQuantUI stores the max_workers
+            # parameters in the settings; pyPOCQuant does not and only accepts the
+            # value via a command line argument.
+            pass
+        else:
+            print(f"The settings file {settings_file} is not valid.")
+            print(f"Please check the following keys: {str(setKeysDiff)}.")
+            sys.exit(1)
 
     # Max number of cores
     if args["max_workers"] == "":
@@ -172,14 +183,16 @@ if __name__ == '__main__':
     print(f"                     Sensor search area: {settings['sensor_search_area']}")
     print(f"                Sensor threshold factor: {settings['sensor_thresh_factor']}")
     print(f"                          Sensor border: {settings['sensor_border']}")
+    print(f"                      Sensor band names: {settings['sensor_band_names']}")
     print(f"       Expected peak relative positions: {settings['peak_expected_relative_location']}")
     print(f"             Subtract signal background: {settings['subtract_background']}")
+    print(f"                       Force FID search: {settings['force_fid_search']}")
     print(f"                         Verbose output: {settings['verbose']}")
     print(f"         Create quality-control figures: {settings['qc']}")
     print(f"")
 
     # Run the pipeline
-    run_FH(
+    run_pipeline(
         input_folder_path,
         results_folder_path,
         raw_auto_stretch=settings['raw_auto_stretch'],
@@ -198,6 +211,8 @@ if __name__ == '__main__':
         sensor_border=settings['sensor_border'],
         peak_expected_relative_location=settings['peak_expected_relative_location'],
         subtract_background=settings['subtract_background'],
+        force_fid_search=settings['force_fid_search'],
+        sensor_band_names=settings['sensor_band_names'],
         verbose=settings['verbose'],
         qc=settings['qc'],
         max_workers=max_workers

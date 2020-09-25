@@ -11,6 +11,10 @@ import pandas as pd
 import sys
 import time
 import cv2
+import logging
+# Set logging level to Error for exifread to prevent the warning
+# 'Possibly corrupted field FocusMode in MakerNote IFD'
+logging.getLogger('exifread').setLevel(logging.ERROR)
 
 
 def create_quality_control_images(

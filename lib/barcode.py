@@ -3,6 +3,7 @@ import imutils
 import numpy as np
 import matplotlib.pyplot as plt
 import pytesseract
+from pytesseract import Output
 from pyzbar.locations import Rect
 from pyzbar.pyzbar import decode
 from pyzbar.pyzbar import ZBarSymbol
@@ -426,7 +427,8 @@ def read_FID_from_barcode_image(image):
     # Use pyzbar to decode the barcode
     decoded_objects = decode(image, SymbolTypes.TYPES.value)
     for obj in decoded_objects:
-        fid_pyzbar = obj.data.decode("utf-8")
+        if obj.type == "CODE128":
+            fid_pyzbar = obj.data.decode("utf-8")
 
     # Give a score to the extraction (max is 3)
     if fid_tesseract == "" and fid_pyzbar == "":
@@ -469,16 +471,55 @@ def get_fid_from_box_image_using_ocr(box_img):
     return fid_tesseract
 
 
+def try_extracting_barcode_from_box_with_rotations(box, scaling=(1.0, 0.5, 0.25), verbose=False, log_list=None):
+
+    # Switch to RGB
+    rgb = cv2.cvtColor(box, cv2.COLOR_BGR2RGB)
+
+    fid = ""
+    rotations = [0, 90, 180, -90]
+    for rotation in rotations:
+
+        # Apply rotation to a copy of the original box image
+        current = rotate(rgb.copy(), rotation)
+
+        for s in scaling:
+
+            if s != 1.0:
+                w = int(s * current.shape[1])
+                h = int(s * current.shape[0])
+                current_scaled = cv2.resize(current, (w, h), cv2.INTER_LANCZOS4)
+            else:
+                current_scaled = current.copy()
+
+            fid, _, log_list = try_extracting_barcode_with_rotation(
+                current_scaled,
+                angle_range=15,
+                verbose=verbose,
+                log_list=log_list
+            )
+
+            if fid != "":
+                return fid, log_list
+
+    return fid, log_list
+
+
 def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, log_list: list=None):
-    # Try with no rotation, if it works we stop.
-    barcode_data = decode(image, SymbolTypes.TYPES.value)
-    fid_pyzbar = get_fid_from_barcode_data(barcode_data)
-    if fid_pyzbar != "":
-        return fid_pyzbar, 0
 
-    # Try with a range of positive rotations
-    for angle in range(1, angle_range + 1):
-        barcode_data = decode(rotate(image.copy(), angle), SymbolTypes.TYPES.value)
+    # Prepare the list of angles to try (build a generator)
+    angles = (x // 2 if x % 2 == 1 else -x // 2 for x in range(1, 2 * (angle_range + 1)))
+
+    for angle in angles:
+
+        # Rotate by the given angle
+        if angle != 0:
+            current = rotate(image.copy(), angle)
+        else:
+            current = image.copy()
+
+        # Use pyzbar
+        barcode_data = decode(current, SymbolTypes.TYPES.value)
         fid_pyzbar = get_fid_from_barcode_data(barcode_data)
         if fid_pyzbar != "":
             if verbose:
@@ -489,18 +530,20 @@ def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, lo
                     log_list.append(msg)
             return fid_pyzbar, angle, log_list
 
-    # Try with a range of negative rotations
-    for angle in range(angle_range, 0, -1):
-        barcode_data = decode(rotate(image.copy(), angle), SymbolTypes.TYPES.value)
-        fid_pyzbar = get_fid_from_barcode_data(barcode_data)
-        if fid_pyzbar != "":
-            if verbose:
-                msg = f"Barcode found with a rotation of {angle} degrees."
-                if log_list is None:
-                    print(msg)
-                else:
-                    log_list.append(msg)
-            return fid_pyzbar, angle, log_list
+        # Use pytesseract to extract the FID
+        results = pytesseract.image_to_data(current, output_type=Output.DICT)
+        n_boxes = len(results['text'])
+        for i in range(n_boxes):
+            fid_tesseract = findall(r'\d{7}', results['text'][i])
+            if fid_tesseract and len(fid_tesseract) == 1:
+                fid_tesseract = fid_tesseract[0]
+                if verbose:
+                    msg = f"Barcode found by OCR with a rotation of {angle} degrees."
+                    if log_list is None:
+                        print(msg)
+                    else:
+                        log_list.append(msg)
+                return fid_tesseract, 0, log_list
 
     return "", None, log_list
 
@@ -589,7 +632,7 @@ def find_strip_box_from_barcode_data_fh(image, barcode_data, qr_code_border=30, 
                 pass
 
         else:
-            print(f"Unexpected barcode with type {barcode.type}.")
+            print(f"Unexpected barcode with type {barcode.symbol}.")
 
     # Now extract the box
     x0 = -1
@@ -700,7 +743,7 @@ def find_strip_box_from_barcode_data(image, barcode_data, qr_code_border=30, qr_
             else:
                 print(f"Unexpected QR code with data {barcode.data.decode('utf-8')}.")
 
-        elif barcode.type == "CODE128":
+        elif barcode.type == "CODE128" or barcode.type == "CODE39":
 
             # Return the (x) coordinate of the left edge of the barcode rectangle.
             # We can use this to crop it away or mask it for alignment later.
@@ -772,6 +815,28 @@ def try_extracting_barcode_with_linear_stretch(image, lower_bound_range=(25,), u
     return "", gray
 
 
+def try_getting_fid_from_code128_barcode(barcode_data):
+    """Try finding a CODE 128 barcode in barcode data that should contain the patient FID."""
+
+    for barcode in barcode_data:
+        if barcode.symbol == "CODE128":
+            return barcode.data.decode("utf-8")
+    return ""
+
+
+def try_get_fid_from_rgb(image):
+    barcode_data = decode(image, SymbolTypes.TYPES.value)
+
+    # return "" if no barcode or of wrong type was detected
+    fid = ""
+    for barcode in barcode_data:
+        if barcode.type == "CODE128" or barcode.type == "CODE39":
+            tmp = barcode.data.decode("utf-8")
+            if tmp != "":
+                fid = tmp
+    return fid
+
+
 def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
         image,
         lower_bound_range=(0, 5, 15, 25, 35),
@@ -794,6 +859,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
     plate = ""
     well = ""
     user = ""
+    fid_128 = ""   # Backward-compatibility with old barcode-based FID
 
     for scaling_factor in scaling:
 
@@ -817,7 +883,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 stretched_gray = exposure.rescale_intensity(gray_process, in_range=(pLb, pUb))
 
                 # Run the barcode detection
-                barcode_data = decode(stretched_gray, [ZBarSymbol.QRCODE])
+                barcode_data = decode(stretched_gray, SymbolTypes.TYPES.value)
 
                 # Are all QR codes and barcodes found successfully?
                 for barcode in barcode_data:
@@ -854,6 +920,12 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                                 well = match.group('well')
                                 user = match.group('user')
                                 score += 1
+
+                    elif barcode.type == "CODE128" or barcode.type == 'CODE39':
+                        tmp = barcode.data.decode("utf-8")
+                        if fid_128 == "" and tmp != "":
+                            fid_128 = tmp
+
                     else:
                         print(f"Unexpected barcode type {barcode.type}.")
 
@@ -869,7 +941,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                         except:
                             pass
 
-                    return barcodes, fid, manufacturer, plate, well, user, lb, ub, score, scaling_factor
+                    return barcodes, fid, manufacturer, plate, well, user, lb, ub, score, scaling_factor, fid_128
 
                 else:
                     if score > best_score:
@@ -890,7 +962,7 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
         except:
             pass
 
-    return barcodes, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor
+    return barcodes, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor, fid_128
 
 
 def try_extracting_all_barcodes_with_linear_stretch(
@@ -942,7 +1014,7 @@ def try_extracting_all_barcodes_with_linear_stretch(
                         result[TL_P] = True
                     else:
                         print(f"Unexpected QR code with data {barcode.data.decode('utf-8')}.")
-                elif barcode.type == "CODE128":
+                elif barcode.type == "CODE128" or barcode.type == "CODE39":
                     # Let's check if the FID was read
                     if barcode.data.decode("utf-8") != "":
                         result[FID] = True

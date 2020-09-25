@@ -3,10 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 
-import cv2
 import matplotlib.pyplot as plt
 import pandas as pd
-import rawpy
 from tqdm import tqdm
 
 from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement_window, \
@@ -14,7 +12,7 @@ from pypocquant.lib.analysis import extract_inverted_sensor, analyze_measurement
     read_patient_data_by_ocr, use_hough_transform_to_rotate_strip_if_needed
 from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barcode_data_fh, \
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
-    align_box_with_image_border_fh
+    align_box_with_image_border_fh, try_get_fid_from_rgb, try_extracting_barcode_from_box_with_rotations
 from pypocquant.lib.consts import Issue
 from pypocquant.lib.io import load_and_process_image
 from pypocquant.lib.processing import BGR2Gray
@@ -31,7 +29,8 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
              perform_sensor_search, sensor_size, sensor_center,
              sensor_search_area, sensor_thresh_factor,
              sensor_border, peak_expected_relative_location,
-             subtract_background, verbose, qc, max_workers=4):
+             subtract_background, force_fid_search, sensor_band_names,
+             verbose, qc, max_workers=4):
     res = []
     log_list = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -46,7 +45,10 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
                         sensor_thresh_factor=sensor_thresh_factor,
                         sensor_border=sensor_border,
                         peak_expected_relative_location=peak_expected_relative_location,
-                        subtract_background=subtract_background, verbose=verbose, qc=qc)
+                        subtract_background=subtract_background,
+                        force_fid_search=force_fid_search,
+                        sensor_band_names=sensor_band_names,
+                        verbose=verbose, qc=qc)
         results = list(tqdm(executor.map(run_n, files), total=len(files)))
     for result in results:
         if result is not None:
@@ -56,7 +58,7 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
     return res, log_list
 
 
-def run_FH(
+def run_pipeline(
         input_folder_path: Path,
         results_folder_path: Path,
         raw_auto_stretch: bool = False,
@@ -75,6 +77,8 @@ def run_FH(
         sensor_border: tuple = (7, 7),
         peak_expected_relative_location: tuple = (0.25, 0.53, 0.79),
         subtract_background: bool = True,
+        force_fid_search: bool = False,
+        sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
         verbose: bool = False,
         qc: bool = False,
         max_workers: int = 2
@@ -155,6 +159,15 @@ def run_FH(
     :param subtract_background: bool
         If True, estimate and subtract the background of the sensor intensity profile.
 
+    :param force_fid_search: bool
+        If True, apply a series of search fall-back approaches to extract patient data from
+        the image. Only use this if the expected QR code with patient data was not added to
+        the image or could not be extracted.
+
+    :param sensor_band_names: tuple
+        Names of the bands for the data frame header. Please notice: the third ([2]) band is
+        always the control band.
+
     :param verbose: bool
         Toggle verbose output.
 
@@ -179,6 +192,7 @@ def run_FH(
                                    perform_sensor_search, sensor_size, sensor_center,
                                    sensor_search_area, sensor_thresh_factor, sensor_border,
                                    peak_expected_relative_location, subtract_background,
+                                   force_fid_search, sensor_band_names,
                                    verbose, qc, max_workers=max_workers)
 
     # Save data frame
@@ -211,6 +225,8 @@ def run_FH(
             "sensor_border": sensor_border,
             "peak_expected_relative_location": peak_expected_relative_location,
             "subtract_background": subtract_background,
+            "force_fid_search": force_fid_search,
+            "sensor_band_names": sensor_band_names,
             "verbose": verbose,
             "qc": qc
         },
@@ -242,13 +258,13 @@ def run(
         sensor_border: tuple = (7, 7),
         peak_expected_relative_location: tuple = (0.27, 0.55, 0.79),
         subtract_background: bool = True,
+        force_fid_search: bool = False,
+        sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
         verbose: bool = False,
         qc: bool = False):
 
     # Initialize the log list
-    image_log = []
-    image_log.append(f" ")
-    image_log.append(f"File = {filename}")
+    image_log = [f" ", f"File = {filename}"]
 
     # Load  the image
     image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch, raw_auto_wb)
@@ -271,15 +287,15 @@ def run(
         "manufacturer": "",
         "plate": "",
         "well": "",
-        "ctl": 0,
-        "igm": 0,
-        "igg": 0,
-        "ctl_abs": 0,
-        "igm_abs": 0,
-        "igg_abs": 0,
-        "ctl_ratio": 0,
-        "igm_ratio": 0,
-        "igg_ratio": 0,
+        sensor_band_names[2]: 0,
+        sensor_band_names[0]: 0,
+        sensor_band_names[1]: 0,
+        sensor_band_names[2] + "_abs": 0,
+        sensor_band_names[0] + "_abs": 0,
+        sensor_band_names[1] + "_abs": 0,
+        sensor_band_names[2] + "_ratio": 0,
+        sensor_band_names[0] + "_ratio": 0,
+        sensor_band_names[1] + "_ratio": 0,
         "issue": Issue.NONE.value
     }
 
@@ -305,7 +321,7 @@ def run(
     results_row["basename"] = basename
 
     # Find the location of the barcodes
-    barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor = \
+    barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor, fid_128 = \
         try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
             image,
             lower_bound_range=(0, 5, 15, 25, 35),
@@ -353,7 +369,7 @@ def run(
     # we fall back to the previous values.
     if image_was_rotated:
         barcode_data, new_fid, new_manufacturer, new_plate, new_well, new_user, new_best_lb, \
-        new_best_ub, new_best_score, new_best_scaling_factor = \
+        new_best_ub, new_best_score, new_best_scaling_factor, new_fid_128 = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
@@ -365,6 +381,15 @@ def run(
         plate = new_plate if plate == "" and new_plate != "" else plate
         well = new_well if well == "" and new_well != "" else well
         user = new_user if user == "" and new_user != "" else user
+
+        # If we did not find the FID from the QRCODE data, did we find it with the
+        # fallback CODE128 barcode?
+        if fid == "" and fid_128 != "":
+            fid = fid_128
+        if fid == "" and new_fid_128 != "":
+            fid = new_fid_128
+
+        image_log.append(f"Detected FIDs for rotated image: {fid} {new_fid} {fid_128} {new_fid_128}")
 
         # Inform
         if verbose:
@@ -398,7 +423,7 @@ def run(
 
     # In case there was still a significant rotation, find the location of the barcodes yet again
     if abs(box_rotation_angle) > 0.5:
-        barcode_data, _, _, _, _, _, _, _, best_score, _ = \
+        barcode_data, _, _, _, _, _, _, _, best_score, _, fid_128 = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
@@ -433,9 +458,36 @@ def run(
             extension=".jpg",
             quality=85
         )
-    # If we could not find a valid FID, we try to run OCR in a region
-    # a bit larger than the box (in y direction).
+    # If we could not find a valid FID, we try to look for code128 barcodes
+    # (previous version of pyPOCQuant)
     if fid == "":
+        if fid_128 != "":
+            fid = fid_128
+        else:
+            if force_fid_search:
+                fid = try_get_fid_from_rgb(image)
+
+    # If at this stage we haven't found the FID, and 'force_fid_search' is
+    # set to True, we try with a series of fallback attempts to extract it
+    # from the image.
+    #
+    # Next attempt, look for the barcode attached to the strip (we use the
+    # whole box anyway). If this works, however, we will only find the FID
+    # and no information about the manufacturer. (This is a fallback for old
+    # images coming from a previous study.)
+    if fid == "" and force_fid_search:
+        # Extract the barcode
+        fid, image_log = try_extracting_barcode_from_box_with_rotations(
+            box,
+            scaling=(1.0, 0.5, 0.25),
+            verbose=verbose,
+            log_list=image_log
+        )
+
+    # If we still could not find a valid FID, we try to run OCR in a region
+    # a bit larger than the box (in y direction). Some images had a label with
+    # the FID attached above the strip box.
+    if fid == "" and force_fid_search:
         box_start_y = box_rect[0] - 600
         if box_start_y < 0:
             box_start_y = 0
@@ -445,16 +497,8 @@ def run(
                        ]
         fid, new_manufacturer = read_patient_data_by_ocr(area_for_ocr)
         if manufacturer == "" and new_manufacturer != "":
+            # Update manufacturer
             manufacturer = new_manufacturer
-
-    results_row["fid"] = fid
-    results_row["manufacturer"] = manufacturer
-    results_row["plate"] = plate
-    results_row["well"] = well
-    results_row["user"] = user
-    results_row["fid_num"] = get_fid_numeric_value_fh(fid)
-    if verbose:
-        image_log.append(f"File {filename}: FID = '{fid}'")
 
     # Do we have a valid FID? If we do not have a valid FID,
     # we can still try and continue with the analysis. Some
@@ -465,7 +509,17 @@ def run(
         # Add issue to the results
         results_row["issue"] = Issue.FID_EXTRACTION_FAILED.value
         image_log.append(f"File {filename}: could not extract FID. "
-                         f"Trying to proceed with the analysis.")
+                         f"Will proceed with the analysis.")
+
+    # Store patient data into the results
+    results_row["fid"] = fid
+    results_row["manufacturer"] = manufacturer
+    results_row["plate"] = plate
+    results_row["well"] = well
+    results_row["user"] = user
+    results_row["fid_num"] = get_fid_numeric_value_fh(fid)
+    if verbose:
+        image_log.append(f"File {filename}: FID = '{fid}'")
 
     # Convert box to gray value
     box_gray = BGR2Gray(box)
@@ -564,7 +618,7 @@ def run(
         sensor_score = 1.0
 
     # Add the sensor score to the results
-    #results_row["sensor_score"] = sensor_score
+    # results_row["sensor_score"] = sensor_score
 
     # Always save the sensor image
     create_quality_control_images(
@@ -582,6 +636,7 @@ def run(
         # fails, we try with a narrower peak_width
         peak_widths = [7, 3]
         successful_peak_width = -1
+        window_results = dict()
         for curr_peak_width in peak_widths:
 
             # We have a sensor image and we can proceed with the analysis
@@ -607,10 +662,17 @@ def run(
         # The values default to zero, so we do not need to explicitly set them in the
         # corresponding band is missing. If the control band is missing, however, we
         # add flag the issue in the result row.
+
+        #
+        # This is the mapping:
+        #
+        #    * "igm" -> sensor_band_names[0]
+        #    * "igg" -> sensor_band_names[1]
+        #    * "ctl" -> sensor_band_names[2]
         if "ctl" in window_results:
-            results_row["ctl"] = 1
-            results_row["ctl_abs"] = window_results["ctl"]["signal"]
-            results_row["ctl_ratio"] = window_results["ctl"]["normalized_signal"]
+            results_row[sensor_band_names[2]] = 1
+            results_row[sensor_band_names[2] + "_abs"] = window_results["ctl"]["signal"]
+            results_row[sensor_band_names[2] + "_ratio"] = window_results["ctl"]["normalized_signal"]
 
             # Inform
             band_type = "normal" if successful_peak_width == peak_widths[0] else "narrow"
@@ -623,14 +685,14 @@ def run(
             results_row["issue"] = Issue.CONTROL_BAND_MISSING.value
 
         if "igg" in window_results:
-            results_row["igg"] = 1
-            results_row["igg_abs"] = window_results["igg"]["signal"]
-            results_row["igg_ratio"] = window_results["igg"]["normalized_signal"]
+            results_row[sensor_band_names[1]] = 1
+            results_row[sensor_band_names[1] + "_abs"] = window_results["igg"]["signal"]
+            results_row[sensor_band_names[1] + "_ratio"] = window_results["igg"]["normalized_signal"]
 
         if "igm" in window_results:
-            results_row["igm"] = 1
-            results_row["igm_abs"] = window_results["igm"]["signal"]
-            results_row["igm_ratio"] = window_results["igm"]["normalized_signal"]
+            results_row[sensor_band_names[0]] = 1
+            results_row[sensor_band_names[0] + "_abs"] = window_results["igm"]["signal"]
+            results_row[sensor_band_names[0] + "_ratio"] = window_results["igm"]["normalized_signal"]
 
     else:
         # Inform
