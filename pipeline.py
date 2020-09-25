@@ -29,7 +29,8 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
              perform_sensor_search, sensor_size, sensor_center,
              sensor_search_area, sensor_thresh_factor,
              sensor_border, peak_expected_relative_location,
-             subtract_background, verbose, qc, max_workers=4):
+             subtract_background, force_fid_search,
+             verbose, qc, max_workers=4):
     res = []
     log_list = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -44,7 +45,8 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
                         sensor_thresh_factor=sensor_thresh_factor,
                         sensor_border=sensor_border,
                         peak_expected_relative_location=peak_expected_relative_location,
-                        subtract_background=subtract_background, verbose=verbose, qc=qc)
+                        subtract_background=subtract_background,
+                        force_fid_search=force_fid_search, verbose=verbose, qc=qc)
         results = list(tqdm(executor.map(run_n, files), total=len(files)))
     for result in results:
         if result is not None:
@@ -73,6 +75,7 @@ def run_pipeline(
         sensor_border: tuple = (7, 7),
         peak_expected_relative_location: tuple = (0.25, 0.53, 0.79),
         subtract_background: bool = True,
+        force_fid_search: bool = False,
         verbose: bool = False,
         qc: bool = False,
         max_workers: int = 2
@@ -153,6 +156,11 @@ def run_pipeline(
     :param subtract_background: bool
         If True, estimate and subtract the background of the sensor intensity profile.
 
+    :param force_fid_search: bool
+        If True, apply a series of search fall-back approaches to extract patient data from
+        the image. Only use this if the expected QR code with patient data was not added to
+        the image or could not be extracted.
+
     :param verbose: bool
         Toggle verbose output.
 
@@ -177,7 +185,7 @@ def run_pipeline(
                                    perform_sensor_search, sensor_size, sensor_center,
                                    sensor_search_area, sensor_thresh_factor, sensor_border,
                                    peak_expected_relative_location, subtract_background,
-                                   verbose, qc, max_workers=max_workers)
+                                   force_fid_search, verbose, qc, max_workers=max_workers)
 
     # Save data frame
     data = pd.DataFrame(rows_list)
@@ -209,6 +217,7 @@ def run_pipeline(
             "sensor_border": sensor_border,
             "peak_expected_relative_location": peak_expected_relative_location,
             "subtract_background": subtract_background,
+            "force_fid_search": force_fid_search,
             "verbose": verbose,
             "qc": qc
         },
@@ -240,13 +249,11 @@ def run(
         sensor_border: tuple = (7, 7),
         peak_expected_relative_location: tuple = (0.27, 0.55, 0.79),
         subtract_background: bool = True,
+        force_fid_search: bool = False,
         verbose: bool = False,
         qc: bool = False):
-
     # Initialize the log list
-    image_log = []
-    image_log.append(f" ")
-    image_log.append(f"File = {filename}")
+    image_log = [f" ", f"File = {filename}"]
 
     # Load  the image
     image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch, raw_auto_wb)
@@ -448,11 +455,15 @@ def run(
         else:
             fid = try_get_fid_from_rgb(image)
 
+    # If at this stage we haven't found the FID, and 'force_fid_search' is
+    # set to True, we try with a series of fallback attempts to extract it
+    # from the image.
+    #
     # Next attempt, look for the barcode attached to the strip (we use the
     # whole box anyway). If this works, however, we will only find the FID
     # and no information about the manufacturer. (This is a fallback for old
     # images coming from a previous study.)
-    if fid == "":
+    if fid == "" and force_fid_search:
         # Extract the barcode
         fid, image_log = try_extracting_barcode_from_box_with_rotations(
             box,
@@ -461,19 +472,10 @@ def run(
             log_list=image_log
         )
 
-    results_row["fid"] = fid
-    results_row["manufacturer"] = manufacturer
-    results_row["plate"] = plate
-    results_row["well"] = well
-    results_row["user"] = user
-    results_row["fid_num"] = get_fid_numeric_value_fh(fid)
-    if verbose:
-        image_log.append(f"File {filename}: FID = '{fid}'")
-
     # If we still could not find a valid FID, we try to run OCR in a region
     # a bit larger than the box (in y direction). Some images had a label with
     # the FID attached above the strip box.
-    if fid == "":
+    if fid == "" and force_fid_search:
         box_start_y = box_rect[0] - 600
         if box_start_y < 0:
             box_start_y = 0
@@ -483,6 +485,7 @@ def run(
                        ]
         fid, new_manufacturer = read_patient_data_by_ocr(area_for_ocr)
         if manufacturer == "" and new_manufacturer != "":
+            # Update manufacturer
             manufacturer = new_manufacturer
 
     # Do we have a valid FID? If we do not have a valid FID,
@@ -494,7 +497,17 @@ def run(
         # Add issue to the results
         results_row["issue"] = Issue.FID_EXTRACTION_FAILED.value
         image_log.append(f"File {filename}: could not extract FID. "
-                         f"Trying to proceed with the analysis.")
+                         f"Will proceed with the analysis.")
+
+    # Store patient data into the results
+    results_row["fid"] = fid
+    results_row["manufacturer"] = manufacturer
+    results_row["plate"] = plate
+    results_row["well"] = well
+    results_row["user"] = user
+    results_row["fid_num"] = get_fid_numeric_value_fh(fid)
+    if verbose:
+        image_log.append(f"File {filename}: FID = '{fid}'")
 
     # Convert box to gray value
     box_gray = BGR2Gray(box)
@@ -593,7 +606,7 @@ def run(
         sensor_score = 1.0
 
     # Add the sensor score to the results
-    #results_row["sensor_score"] = sensor_score
+    # results_row["sensor_score"] = sensor_score
 
     # Always save the sensor image
     create_quality_control_images(
@@ -611,6 +624,7 @@ def run(
         # fails, we try with a narrower peak_width
         peak_widths = [7, 3]
         successful_peak_width = -1
+        window_results = dict()
         for curr_peak_width in peak_widths:
 
             # We have a sensor image and we can proceed with the analysis
