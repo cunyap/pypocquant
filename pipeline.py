@@ -230,9 +230,9 @@ def run_pipeline(
             "verbose": verbose,
             "qc": qc
         },
-        str(results_folder_path / "settings.txt")
+        str(results_folder_path / "settings.conf")
     )
-    print(f"Settings written to {str(results_folder_path / 'settings.txt')}")
+    print(f"Settings written to {str(results_folder_path / 'settings.conf')}")
 
     # Inform
     print("Pipeline completed.")
