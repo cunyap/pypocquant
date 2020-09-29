@@ -2,7 +2,7 @@
 
 ## Introduction <a name="introduction"></a>
 
-The tool pyPOCQuant aims to automatically detect and quantify signal bands from **Point of Care tests** (**POC** or **POCT**) from an image. It can batch analyze large amounts of images in parallel.
+The tool __pyPOCQuant__ aims to automatically detect and quantify signal bands from __lateral flow assays__ (__LFA__) or **Point of Care tests** (**POC** or **POCT**) from an image. It can batch analyze large amounts of images in parallel.
 
 An analysis pipeline can be run either from the command line (good for automating large numbers of analysis) or from a desktop application.
 
@@ -58,23 +58,26 @@ $ python ./pypocquant/pyPOCQuant_FH.py -c /PATH/TO/INPUT/settings_file.conf
 Open the file in a text editor and edit it.
 
 ```bash
-raw_auto_stretch=False
-raw_auto_wb=False
-strip_text_to_search='COVID'
-strip_text_on_right=True
-strip_size=None
-qr_code_border=40
-sensor_size=(61, 249)
+max_workers=2
+qc=True
+verbose=True
+sensor_band_names=('igm', 'igg', 'ctl')
+peak_expected_relative_location=(0.25, 0.53, 0.79)
 sensor_center=(178, 667)
-subtract_background=True
+sensor_size=(61, 249)
 sensor_border=(7, 7)
 perform_sensor_search=True
-sensor_thresh_factor=2
+qr_code_border=40
+subtract_background=True
 sensor_search_area=(71, 259)
-peak_expected_relative_location=(0.25, 0.53, 0.79)
-verbose=True
-qc=True
-max_workers=None
+sensor_thresh_factor=2.0
+raw_auto_stretch=False
+raw_auto_wb=False
+strip_try_correct_orientation=True
+strip_try_correct_orientation_rects=(0.52, 0.15, 0.09)
+strip_text_to_search='COVID'
+strip_text_on_right=True
+force_fid_search=True
 ```
 
 > Some of the parameter names contain the term `strip`: this is used to indicate the POCT. The prefix `sensor` indicates the measurement region within the `strip`.
@@ -95,7 +98,7 @@ Sensor parameters are relative to the POCT image.
 
 ![Extrated strip](strip_annotated.png)
 
-In the following we show how to obtain position and extent of the sensor areas in Fiji. Later we will see how to do the same in the pyPOCQuant user interface.
+In the following we show how to obtain position and extent of the sensor areas in Fiji or ImageJ. Later we will see how to do the same in the pyPOCQuant user interface.
 
 ![Area selection in Fiji](fiji_selection.png)
 
@@ -136,7 +139,7 @@ A settings file must not necessarily be created in advance. The Parameter Tree c
 How to estimate sensor parameters graphically in the UI:
 
 * `Select the input folder` and click on one of the listed images to display it. The POCT region will be automatically extracted and shown in the view at the top. The lower view shows the whole image.
-* Hit the `Draw sensor outline` icon (red arrow) in the toolbar. This will allow you to interactively define the `sensor area and the `peak_expected_relative_location` parameters.
+* Hit the `Draw sensor outline` icon (red arrow) in the toolbar. This will allow you to interactively define the `sensor area` and the `peak_expected_relative_location` parameters.
 
 ![](pyPOCQuantUI_extracting_POCT.png)
 
@@ -156,30 +159,33 @@ Once the previous steps are done and all parameters are correctly set, you can h
 The following settings must be specified. These are default values and need to be adopted for a series of the same kind of images. Please note: in the following, `strip` is used to indicate the POCT, and `sensor` to indicate the measurement region within the `strip`.
 
 ```bash
+max_workers=2
+qc=True
+verbose=True
+sensor_band_names=('igm', 'igg', 'ctl')
+peak_expected_relative_location=(0.25, 0.53, 0.79)
+sensor_center=(178, 667)
+sensor_size=(61, 249)
+sensor_border=(7, 7)
+perform_sensor_search=True
+qr_code_border=40
+subtract_background=True
+sensor_search_area=(71, 259)
+sensor_thresh_factor=2.0
 raw_auto_stretch=False
 raw_auto_wb=False
-strip_text_to_search="COVID"
+strip_try_correct_orientation=True
+strip_try_correct_orientation_rects=(0.52, 0.15, 0.09)
+strip_text_to_search='COVID'
 strip_text_on_right=True
-min_sensor_score=0.85
-qr_code_border=40
-sensor_size=(62, 230)
-sensor_center=(152, 601)
-subtract_background=True
-sensor_border_x=7
-sensor_border_y=7
-perform_sensor_search=True
-sensor_thresh_factor=2
-sensor_search_area=(71, 259)
-peak_expected_relative_location=(0.25, 0.53, 0.79)
-verbose=True
-qc=True
+force_fid_search=True
 ```
 
 ### Explanations
 
 #### Runtime parameters
 
-##### Number of cores
+##### max_workers
 
 * The analysis can work in parallel. Specify the maximum number of images that are run in parallel. The maximum allowed value is the number of cores in your machine.
 
@@ -197,33 +203,9 @@ qc=True
 
 #### Basic parameters
 
-##### sensor_size
+#### sensor_band_names
 
-* Area in pixels of the sensor to be extracted: `(height, width)`.
-
-##### sensor_center
-
-*  Coordinates in pixels of the center of the sensor with respect to the strip image: `(y, x)`.
-
-##### sensor_border_x
-
-* Lateral sensor border in pixels to be ignored in the analysis to avoid border effects.
-
-##### sensor_border_y
-
-* Vertical sensor border in pixels to be ignored in the analysis to avoid border effects.
-
-##### subtract_background
-
-* If `True`, estimate and subtract the background of the sensor intensity profile (bands).
-* Possible values: `True` or `False`
-* Recommended: `True`
-
-##### perform_sensor_search
-
-* If `True`, the (inverted) sensor is searched within `sensor_search_area` around the expected `sensor_center`; if `False`, the sensor of size `sensor_size` is simply extracted from the strip image centered at the relative strip position `sensor_center`.
-* Possible values: `True` or `False`
-* Recommended: `True`
+* Custom name for the three bands t2, t1 and ctl. i.e IgM, IgG and Ctl.
 
 ##### peak_expected_relative_location
 
@@ -242,19 +224,33 @@ qc=True
 
   **Some pre-calculated `peak_expected_relative_location` values for known POCTs.**
 
+##### sensor_center
+
+*  Coordinates in pixels of the center of the sensor with respect to the strip image: `(y, x)`.
+
+##### sensor_size
+
+* Area in pixels of the sensor to be extracted: `(height, width)`.
+
+##### sensor_border
+
+* Lateral and vertical sensor border in pixels to be ignored in the analysis to avoid border effects: `(lateral, vertical)`.
+
+##### perform_sensor_search
+
+* If `True`, the (inverted) sensor is searched within `sensor_search_area` around the expected `sensor_center`; if `False`, the sensor of size `sensor_size` is simply extracted from the strip image centered at the relative strip position `sensor_center`.
+* Possible values: `True` or `False`
+* Recommended: `True`
+
 ##### qr_code_border
 
 * Lateral and vertical extension of the (white) border around each QR code.
 
-##### strip_text_to_search
+##### subtract_background
 
-* Text to search on the strip to assess orientation. Set to `""` to skip. This can help if the automatic estimation of the strip orientation fails. If the strip has some text printed on either side of the sensor, it can be searched to guess the orientation. See also `strip_text_on_right`.
-
-##### strip_text_on_right
-* Assuming the strip is oriented horizontally, whether the `strip_text_to_search` text
-    is expected to be on the right. If `strip_text_on_right` is `True` and the text is found on the
-    left hand-side of the strip, the strip will be rotated 180 degrees.
-* Ignored if `strip_text_to_search` is `""`.
+* If `True`, estimate and subtract the background of the sensor intensity profile (bands).
+* Possible values: `True` or `False`
+* Recommended: `True`
 
 #### Advanced parameters
 
@@ -283,6 +279,34 @@ These parameters will most likely work with the default values above.
 * Whether to automatically stretch image intensities of RAW images on load. This does not affect JPEG images!
 * Possible values: `True` or `False`
 * Recommended: `False`
+
+##### strip_try_correct_orientation
+
+* Whether to automatically try to rotate an misaligned image where the control band is not on the right. It will try with two independent methods to detect the orientation. The first will try to detect the pipetting inlet which is assumed to be opposite of the control band and alywas on the left. If not the images will be rotated. The second will try to read potential text from the strip i.e. COVID. Here the user needs to indicate on which side the text should be in respect to the control band. 
+* Possible values: `True` or `False`
+* Recommended: `False`
+
+##### strip_try_correct_orientation_rects
+
+* Parameters for defining two rectangles left and right from the sensor center to be used to detect the pipetting inlet. The first param is the `Relative height factor` defines the hight of the rectangles in respect to the strip. The second param is the `Relative center cut-off` defines the relative ofsett from the sensor senter and therefore defines the width of the rectangle. The third parameter `Relative border cut-off` defines the relative ofsett from the strip left and right border and also defines the width
+* Possible values: `(0:1, 0:1, 0:1)`
+* Recommended: `(0.52, 0.15, 0.09)`
+
+##### strip_text_to_search
+
+* Text to search on the strip to assess orientation. Set to `""` to skip. This can help if the automatic estimation of the strip orientation fails. If the strip has some text printed on either side of the sensor, it can be searched to guess the orientation. See also `strip_text_on_right`.
+
+##### strip_text_on_right
+
+* Assuming the strip is oriented horizontally, whether the `strip_text_to_search` text
+    is expected to be on the right. If `strip_text_on_right` is `True` and the text is found on the
+    left hand-side of the strip, the strip will be rotated 180 degrees.
+* Ignored if `strip_text_to_search` is `""`.
+
+##### force_fid_search
+
+* If force fid search is activated we try to find hard (slow) to find an FID on a barcode or QR code label on the image identifying the sample.
+* force_fid_search=True
 
 ## Results <a name="resultsdescription"></a>
 
@@ -450,5 +474,25 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
 8. `Run`: Runs the pipeline with the current settings**.
 
-9. `Log`: Information the user about performed actions.
+9. `Measure distance`: Lets you draw a line on the image to measure distances. It will update the `qr_border_distance` parameter.
+
+10. `Log`: Shows/Hides information the user about performed actions.
+
+11. `Tools menu`:
+
+    * `Save POCT template`: Lets you save and print the POCT template to be used for the image acquisition.
+
+    * `Save QR labels templeate` Lets you save an Excel template to be used to generate QR code labels for all your samples from a list.
+
+    * `Generate QR labels`: Lets you generate QR labels for your samples using the excel template or a csv file with a list of the names in the correct format (SAMPEID-MANUFACTURER-PLATE-Well-USER). You can define the page size, label size, position and number per page to match the format for any printable label paper as i.e from AVERY.
+
+12. `Help menu`:
+
+    * `Quick instructions`
+
+    * `Quick start` Opens the quick start document describing how to set up the image acquisition setup, perform the acquisition and some potential problems and their solutions one might encounter.
+
+    * `User manual`: Opens this document
+
+    * `About`: About the software and its dependencies
 
