@@ -1,5 +1,6 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 
@@ -177,6 +178,10 @@ def run_pipeline(
     :param max_workers int
         Number of max cores to use for running the pipeline
     """
+
+    # Input argument sanitation
+    if sensor_search_area[0] < sensor_size[0] or sensor_search_area[1] < sensor_size[1]:
+        sensor_search_area = deepcopy(sensor_size)
 
     # Make sure the results folder exists
     results_folder_path.mkdir(exist_ok=True)
