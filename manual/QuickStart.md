@@ -34,9 +34,9 @@ Glue or stick the template on one or two cartons and again cut out the region to
 
 The basis of the template mount could also be 3D printed or laser cut from any material and aligned with the POCT template to build a solid POCT mount.
 
-| Fig. 1                                                  | Fig. 2                                      |
-| ------------------------------------------------------- | ------------------------------------------- |
-| <img src="setup/Laufblatt_FHNW_v1-01.png"/>| <img src="setup/ImagingTemplate-01.png"/>|
+| Fig. 1                               | Fig. 2                                    |
+| ------------------------------------ | ----------------------------------------- |
+| <img src="setup/POCT_template.png"/> | <img src="setup/ImagingTemplate-01.png"/> |
 
 
 
