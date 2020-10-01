@@ -54,7 +54,8 @@ def build_manual() -> bool:
         print(f'Failed building manual file {html_file}.')
 
         return False
-		
+
+
 def build_quickstart() -> bool:
     """Build the quickstart file.
 
@@ -96,6 +97,6 @@ def build_quickstart() -> bool:
 
     else:
 
-        print(f'Failed building manual file {html_file}.')
+        print(f'Failed building quick start file {html_file}.')
 
         return False
