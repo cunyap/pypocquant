@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from copy import deepcopy
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -485,6 +486,10 @@ def get_sensor_contour_fh(
         min_control_bar_width=7
 ):
     """Extract the sensor area from the gray strip image."""
+
+    # Input argument sanitation
+    if sensor_search_area[0] < sensor_size[0] or sensor_search_area[1] < sensor_size[1]:
+        sensor_search_area = deepcopy(sensor_size)
 
     # Invert the image so that the bands are white
     bit_depth = 8 if strip_gray.dtype == np.uint8 else 16
