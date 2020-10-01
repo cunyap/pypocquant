@@ -911,7 +911,22 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                                 r'^(?P<fid>[A-Z]+[0-9]{6,18})-(?P<manufacturer>.+)-Plate (?P<plate>\d{1,3})-Well (?P<well>.+)-(?P<user>.+)$',
                                 barcode.data.decode('utf-8'))
                             if match is None:
-                                print(f"Unexpected QR code with data {barcode.data.decode('utf-8')}.")
+
+                                # Let's try a simple F1234567
+                                match = re.search(
+                                    r'^(?P<fid>F[0-9]{7})$',
+                                    barcode.data.decode('utf-8'))
+
+                                if match is None:
+                                    print(f"Unexpected QR code with data {barcode.data.decode('utf-8')}.")
+
+                                else:
+                                    fid = match.group('fid')
+                                    manufacturer = ""
+                                    plate = ""
+                                    well = ""
+                                    user = ""
+                                    score += 1
 
                             else:
                                 fid = match.group('fid')
