@@ -64,7 +64,7 @@ Do __not write to or stick anything on the POCT__. Use the QR code labels instea
 
 Step 1: 
 
-* Check that __all QR codes on the template__ are in the field of view and on the image
+* Check that __all QR codes on the template__ are in the field of view and on the image.
 
 Step 2:
 
@@ -76,7 +76,7 @@ Step 3:
 
 Step 4:
 
-* Check that the image __is sharp and in focus: in particular the POCT sensor area and the QR codes__
+* Check that the image __is sharp and in focus: in particular the POCT sensor area and the QR codes__.
 
 
 
