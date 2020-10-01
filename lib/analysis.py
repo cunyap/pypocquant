@@ -724,10 +724,14 @@ def extract_rotated_strip_from_box(box_gray, box):
     # its width somewhat parallel to the X axis)
     if width > height:
         angle = rect[2]
-        if abs(angle) < 45:
-            corr_angle = -1 * angle
+        if 0 <= angle < 45:
+            corr_angle = -angle
+        elif 0 > angle >= -45:
+            corr_angle = angle
+        elif 45 <= angle < 90:
+            corr_angle = 90 - angle
         else:
-            corr_angle = 90 + angle
+            corr_angle = angle - 90
 
         # Rotate
         nBW_rotated = rotate(nBW, corr_angle)
