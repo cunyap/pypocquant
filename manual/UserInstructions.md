@@ -216,24 +216,11 @@ force_fid_search=True
 
 #### sensor_band_names
 
-* Custom name for the three bands t2, t1 and ctl. i.e IgM, IgG and Ctl.
+* Custom name for the three bands `t2`, `t1` and `ctl` (e.g., `IgM`, `IgG` and `Ctl`).
 
 ##### peak_expected_relative_location
 
-* Expected relative peak positions as a function of the width of the sensor (= 1.0).
-
-| POCT            | peak_expected_relative_location |
-| --------------- | ------------------------------- |
-| AUGURIX         | (0.30, 0.50, 0.70)              |
-| BIOZAK          | (0.25, 0.50, 0.75)              |
-| CTKBIOTECH      | (0.25, 0.53, 0.79)              |
-| SUREBIOTECH     | (0.31, 0.54, 0.75)              |
-| TARMINA         | -                               |
-| DRALBERMEXACARE | -                               |
-| LUMIRATEK       | -                               |
-| NTBIO           | -                               |
-
-  **Some pre-calculated `peak_expected_relative_location` values for known POCTs.**
+* Expected relative peak positions as a function of the width of the sensor (= 1.0). These values can easily be set interactively [using the UI](#settingsprepa).
 
 ##### sensor_center
 
@@ -294,19 +281,19 @@ These parameters will most likely work with the default values above.
 
 ##### strip_try_correct_orientation
 
-* Whether to automatically try to rotate an misaligned image where the control band is not on the right. It will try with two independent methods to detect the orientation. The first will try to detect the pipetting inlet which is assumed to be opposite of the control band and alywas on the left. If not the images will be rotated. The second will try to read potential text from the strip i.e. COVID. Here the user needs to indicate on which side the text should be in respect to the control band. 
+* Whether to automatically try to rotate a POCT that was mistakenly placed on the template facing the wrong direction (and where the control band is on the left instead of on the right). The pipetting inlet will be searched in the POCT; the inlet is assumed to be found on the side opposite to the control band, and always on the left. If found on the right, the image will be rotated.
 * Possible values: `True` or `False`
-* Recommended: `False`
+* Recommended: `True`
 
 ##### strip_try_correct_orientation_rects
 
-* Parameters for defining two rectangles left and right from the sensor center to be used to detect the pipetting inlet. The first param is the `Relative height factor` defines the hight of the rectangles in respect to the strip. The second param is the `Relative center cut-off` defines the relative ofsett from the sensor senter and therefore defines the width of the rectangle. The third parameter `Relative border cut-off` defines the relative ofsett from the strip left and right border and also defines the width
+* Parameters for defining two rectangles left and right from the sensor center to be used to detect the pipetting inlet. The first parameter, `Relative height factor`, defines the relative height of the rectangles with respect to the strip. The second parameter, `Relative center cut-off`, defines the relative offset from the sensor center and therefore the width of the rectangle. Finally, the third parameter, `Relative border cut-off`, defines the relative offset from the strip's left and right borders and hence the width of the search rectangle.
 * Possible values: `(0:1, 0:1, 0:1)`
 * Recommended: `(0.52, 0.15, 0.09)`
 
 ##### strip_text_to_search
 
-* Text to search on the strip to assess orientation. Set to `""` to skip. This can help if the automatic estimation of the strip orientation fails. If the strip has some text printed on either side of the sensor, it can be searched to guess the orientation. See also `strip_text_on_right`.
+* Whether to use a specific text printed on the POCT to automatically try to rotate a POCT that was mistakenly placed on the template facing the wrong direction (and where the control band is on the left instead of on the right). Set to `""` to skip search and correction. If the strip has some text printed on either side of the sensor, it can be searched to guess the orientation. See also `strip_text_on_right`.
 
 ##### strip_text_on_right
 
@@ -315,7 +302,7 @@ These parameters will most likely work with the default values above.
 
 ##### force_fid_search
 
-* If force fid search is activated we try to find hard (slow) to find an FID on a barcode or QR code label on the image identifying the sample.
+* If force fid search is activated, try hard (and slow!) to find an FID on a barcode or QR code label on the image identifying the sample.
 * force_fid_search=True
 
 ## Results <a name="resultsdescription"></a>
@@ -326,33 +313,57 @@ The analysis pipeline delivers a `.csv` that contains a relatively large table o
 
 Structure and description of the result table:
 
-* `fid`: patient FID in the form `F5921788`
-* `fid_num`: just the numeric part of the FID (i.e., `5921788`)
-* `filename`: name of the analyzed image
-* `extension`: extension (either *.JPG or *.NEF)
-* `basename`: filename without extension
-* `iso_date`: date of image acquisition in the form YYYY-MM-DD (e.g. 2020-04-14)
-* `iso_time`: time of image acquisition in the form HH-MM-SS (24-h format)
-* `exp_time`: camera exposure time
-* `f_number`: aperture F number
-* `focal_length_35_mm`: 35mm equivalent focal length
-* `iso_speed`: camera ISO value
-* `manufacturer`:  POCT manufacturer
-* `plate`: plate number
-* `well`: well (e.g. `A 01`)
-* `ctl`: 1 if the control band could be extracted, 0 otherwise.
-* `igm`: 1 if the IgM band could be extracted, 0 otherwise.
-* `igg`: 1 if the IgG band could be extracted, 0 otherwise. 
-* `ctl_abs`: absolute signal strength of the control band,
-* `igm_abs`: absolute signal strength of the IgM band,
-* `igg_abs`: absolute signal strength of the IgG band.
-* `ctl_ratio`: relative signal strength of the control band (always 1.0 if detected)
-* `igm_ratio`: relative signal strength of the IgM band with respect to the control band
-* `igg_ratio`: relative signal strength of the IgG band with respect to the control band
-* `issue`: if issue is 0, the image could be analyzed successfully, if issue > 0 it could not. See the list of issues below
-* `user`: custom field
+`fid`: patient FID in the form `F5921788`
 
-> Note: expect small residual variations in the absolute signal strengths (`ctl_abs`, `igm_abs`, and `igg_abs`) across images in a batch due to inhomogeneities  in acquisition.
+`fid_num`: just the numeric part of the FID (i.e., `5921788`)
+
+`filename`: name of the analyzed image
+
+`extension`: extension (either *.JPG or *.ARW, *.CR2, *.NEF)
+
+`basename`: filename without extension
+
+`iso_date`: date of image acquisition in the form YYYY-MM-DD (e.g. 2020-04-14)
+
+`iso_time`: time of image acquisition in the form HH-MM-SS (24-h format)
+
+`exp_time`: camera exposure time
+
+`f_number`: aperture F number
+
+`focal_length_35_mm`: 35mm equivalent focal length
+
+`iso_speed`: camera ISO value
+
+`manufacturer`:  POCT manufacturer
+
+`plate`: plate number
+
+`well`: well (e.g. `A 01`)
+
+`ctl`: 1 if the control band could be extracted, 0 otherwise.
+
+`t2`: 1 if the `t2` band (e.g. IgM) could be extracted, 0 otherwise.
+
+`t1`: 1 if the `t1` band (e.g. IgG) could be extracted, 0 otherwise. 
+
+`ctl_abs`: absolute signal strength of the control band,
+
+`t2_abs`: absolute signal strength of the `t2` band,
+
+`t1_abs`: absolute signal strength of the `t1` band.
+
+`ctl_ratio`: relative signal strength of the control band (always 1.0 if detected)
+
+`t2_ratio`: relative signal strength of the `t2` band with respect to the control band
+
+`t1_ratio`: relative signal strength of the `t1` band with respect to the control band
+
+`issue`: if issue is 0, the image could be analyzed successfully, if issue > 0 it could not. See the list of issues below
+
+`user`: custom field
+
+> Note: expect small residual variations in the absolute signal strengths (`ctl_abs`, `t2_abs`, and `t1_abs`) across images in a batch due to inhomogeneities  in acquisition.
 
 #### Analysis issues<a name="analysisissues"></a>
 
@@ -364,9 +375,9 @@ Each analyzed image is assigned an integer `issue`:
 
 * 2: FID extraction failed
 
-* 3: poor strip alignment (see `strip_corr_coeff` column in the results data table)
+* 3: poor strip alignment
 
-* 4: sensor extraction failed (see `sensor_score` column in the results data table)
+* 4: sensor extraction failed
 
 * 5: peak/band quantification failed
 
@@ -426,7 +437,7 @@ Raw image shown as comparison:
 
   <img src="demo_image/IMG_8489_JPG_peak_background_estimation.png" style="zoom:45%;" />
 
-* `IMAGE_FILE_NAME_peak_analysis`: Control figure displaying the performance of the peak analysis. Red circle indicates the max peak height. The green dashed line is an estimate of the local background that is used to test all candidate local maxima against a threshold defined by the red dashed line. This line is calculated as the (median of the background values) + `f` * (median deviation of the background values). The factor `f`    is a user parameter and defaults to 2. The solid blue, orange and green line under the curves indicate the local span of each of the bands and indicate which part of the signal is integrated.
+* `IMAGE_FILE_NAME_peak_analysis`: Control figure displaying the performance of the peak analysis. Red circle indicates the max peak height. The green dashed line is an estimate of the local background that is used to test all candidate local maxima against a threshold defined by the red dashed line. This line is calculated as the (median of the background values) + `f` * (median deviation of the background values). The factor `f`   is a user parameter and defaults to 2. The solid blue, orange and green line under the curves indicate the local span of each of the bands and indicate which part of the signal is integrated.
 
   <img src="demo_image/IMG_8489_JPG_peak_analysis.png" style="zoom:45%;" />
 
@@ -482,7 +493,7 @@ The GUI offers several actions via the menu, the toolbar and buttons.
    <img src="ui_images/toolbar.JPG"/>
 
    * `Load settings from file`: Load settings from file into the Parameter Tree.
-   * ``Save settings to file`: Save current settings to file.
+   * `Save settings to file`: Save current settings to file.
    * `Draw sensor outline`: Activates drawing a polygon by clicking into the corners of the sensor on the images.
    * `Delete sensor`: Deletes currently drawn sensor.
    * `Mirror image vertically`: Mirrors the displayed image vertically.
@@ -496,11 +507,11 @@ The GUI offers several actions via the menu, the toolbar and buttons.
    * `Measure distance`: Lets you draw a line on the image to measure distances. It will update the `qr_border_distance` parameter.
    * `Show / hide console`: shows or hides the console at the bottom of the UI.
 
-3. ``Select input folder`: Allows to specify the input folder.
+3. `Select input folder`: Allows to specify the input folder.
 
    `Select output folder`: (Optional) Lets you select a output folder. If left empty a output subfolder is automatically generated  in the input folder.
 
-   `Image list`: Lists all available images in the input folder. Click onto the filename to display one in **5**
+   `Image list`: Lists all available images in the input folder. Click onto the filename to display one in **5**.
 
 4. `Parameter Tree`: Adjust parameters manually if needed.
 
@@ -520,7 +531,7 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
     * `Save POCT template`: Lets you save and print the POCT template to be used for the image acquisition.
 
-    * `Save QR labels templeate` Lets you save an Excel template to be used to generate QR code labels for all your samples from a list.
+    * `Save QR labels template` Lets you save an Excel template to be used to generate QR code labels for all your samples from a list.
 
     * `Generate QR labels`: Lets you generate QR labels for your samples using the excel template or a csv file with a list of the names in the correct format (SAMPEID-MANUFACTURER-PLATE-Well-USER). You can define the page size, label size, position and number per page to match the format for any printable label paper as i.e from AVERY.
 
@@ -530,11 +541,11 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
     <img src="ui_images/help.JPG"/>
 
-    * `Quick instructions`
+    * `Quick instructions`: Shows the quick instructions dialog.
 
-    * `Quick start` Opens the quick start document describing how to set up the image acquisition setup, perform the acquisition and some potential problems and their solutions one might encounter.
+    * `Quick start`: Opens the quick start document describing how to set up the image acquisition setup, perform the acquisition and some potential problems and their solutions one might encounter.
 
-    * `User manual`: Opens this document
+    * `User manual`: Opens this document.
 
-    * `About`: About the software and its dependencies
+    * `About`: About the software and its dependencies.
 
