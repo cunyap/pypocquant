@@ -1,5 +1,6 @@
 import cv2
 import rawpy
+import numpy as np
 
 
 def load_and_process_image(
@@ -35,7 +36,14 @@ def load_and_process_image(
         image = cv2.imread(full_filename)
 
         if image is None:
-            return None
+
+            # openCV's imread() cannot open files with non-ASCII characters in the path.
+            # Let's try a workaround.
+            image = cv2.imdecode(np.fromfile(full_filename, np.uint8), cv2.IMREAD_UNCHANGED)
+
+            # Did it work this time?
+            if image is None:
+                return None
 
         # Convert to RGB?
         if to_rgb:
