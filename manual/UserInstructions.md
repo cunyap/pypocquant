@@ -8,7 +8,7 @@ An analysis pipeline can be run either from the command line (good for automatin
 
 > At current stage, almost all operations are supported from the user interface, with the exception of the optional [Split images by strip manufacturer](#Split-images-by-POCT-manufacturer) step.
 
-![pyPOCQuant user interface](ui_images/ui_full_empty.JPG)
+<img src="ui_images/ui_full_empty.JPG"/>
 
 ## Command line workflow <a name="command_line_workflow"></a>
 
@@ -96,11 +96,11 @@ Important parameters are the `sensor_size`, `sensor_center`, and `sensor_search_
 
 Sensor parameters are relative to the POCT image.
 
-![Extrated strip](demo_image\strip_annotated.png)
+<img src="demo_image/strip_annotated.png"/>
 
 In the following we show how to obtain position and extent of the sensor areas in Fiji or ImageJ. Later we will see how to do the same in the pyPOCQuant user interface.
 
-![Area selection in Fiji](demo_image\fiji_selection.png)
+<img src="demo_image/fiji_selection.png"/>
 
 * When drawing a rectangular region of interest, the size is displayed in Fiji's toolbar; e.g. `x=539, y=145, **w=230, h=62**`.
 * When hovering over the central pixels in the top or left sides of the selection, the `x`, and `y` coordinates of the center, respectively, are show in Fiji's toolbar; e.g. `x=*601*, y=144, value=214` (and equivalently for `y`).
@@ -142,15 +142,15 @@ How to estimate sensor parameters graphically in the UI:
 
 * Hit the `Draw sensor outline` icon (red arrow) in the toolbar. This will allow you to interactively define the `sensor area` and the `peak_expected_relative_location` parameters.
 
-  |                                               |                                                 |
-  | --------------------------------------------- | ----------------------------------------------- |
-  | ![ui_drawing](ui_images\ui_drawing_arrow.jpg) | ![ui_bar_aligned](ui_images\ui_bar_aligned.JPG) |
+| Drawing sensor by clicking into the corners | Drawing finished with aligned bars      |
+| ------------------------------------------- | ----------------------------------------- |
+| <img src="ui_images/ui_drawing_arrow.jpg"/> | <img src="ui_images/ui_bar_aligned.JPG"/> |
 
   
 
 * Draw the four corners of the sensor and place the vertical bars on the bands. This will cause all relevant parameters to be populated in the Parameter Tree. Please notice that, by default, the `sensor_search_area` is set to be 10 pixels wider and taller than the `sensor_size`. This can be changed in the advanced parameters (but beware to keep it only slightly larger than the `sensor_size`: it is meant only for small refinements).
 
-![](ui_images\ui_new_settings.JPG)
+<img src="ui_images/ui_new_settings.JPG"/>
 
 * You can test current parameters on one image by clicking the `Test parameters` button under the Parameter Tree.
 * Optionally, you can save the settings file (Ctrl+S, `File`->`Save settings file`)
@@ -192,7 +192,7 @@ force_fid_search=True
 
 #### Runtime parameters
 
-![runtime_params](ui_images\runtime_params.JPG)
+<img src="ui_images/runtime_params.JPG"/>
 
 ##### max_workers
 
@@ -212,7 +212,7 @@ force_fid_search=True
 
 #### Basic parameters
 
-![basic_params](ui_images\basic_params.JPG)
+<img src="ui_images/basic_params.JPG"/>
 
 #### sensor_band_names
 
@@ -267,7 +267,7 @@ force_fid_search=True
 
 These parameters will most likely work with the default values above.
 
-![advanced_params](ui_images\advanced_params.JPG)
+<img src="ui_images/advanced_params.JPG"/>
 
 ##### sensor_search_area
 
@@ -277,8 +277,7 @@ These parameters will most likely work with the default values above.
 
 ##### sensor_thresh_factor
 
-* Set the number of (robust) standard deviations away from the median band background for a peak (band)
-      to be considered valid.
+* Set the number of (robust) standard deviations away from the median band background for a peak (band) to be considered valid.
 * Recommended: `2`, maybe `3`.
 
 ##### raw_auto_stretch
@@ -311,9 +310,7 @@ These parameters will most likely work with the default values above.
 
 ##### strip_text_on_right
 
-* Assuming the strip is oriented horizontally, whether the `strip_text_to_search` text
-    is expected to be on the right. If `strip_text_on_right` is `True` and the text is found on the
-    left hand-side of the strip, the strip will be rotated 180 degrees.
+* Assuming the strip is oriented horizontally, whether the `strip_text_to_search` text is expected to be on the right. If `strip_text_on_right` is `True` and the text is found on the left hand-side of the strip, the strip will be rotated 180 degrees.
 * Ignored if `strip_text_to_search` is `""`.
 
 ##### force_fid_search
@@ -381,45 +378,57 @@ Types and examples' of quality control images:
 
 Raw image shown as comparison:
 
-   	<img src="demo_image/IMG_8489.png" style="zoom:35%;" />
-
+<img src="demo_image/IMG_8489.png" style="zoom:35%;" />
 
 * `IMAGE_FILE_NAME_aligned_box` Aligned raw image
-<img src="demo_image/IMG_8489_JPG_aligned_box.jpg" style="zoom:5%;" />
+
+  <img src="demo_image/IMG_8489_JPG_aligned_box.jpg" style="zoom:5%;" />
+
 * `IMAGE_FILE_NAME_box` : QR code box around the POCT oriented such that the control band is always on the right side.
-<img src="demo_image/IMG_8489_JPG_box.jpg" style="zoom:20%;" />
+
+  <img src="demo_image/IMG_8489_JPG_box.jpg" style="zoom:20%;" />
+
 * `IMAGE_FILE_NAME_rotated`: Raw image rotated such that the POCT is at the parallel to the bottom side of the image.
-<img src="demo_image/IMG_8489_JPG_rotated.jpg" style="zoom:5%;" />
+
+  <img src="demo_image/IMG_8489_JPG_rotated.jpg" style="zoom:5%;" />
 
 
 * `IMAGE_FILE_NAME_strip_gray_aligned`: Aligned POCT cropped around its outline such that it is parallel to the bottom side.
+
   <img src="demo_image/IMG_8489_JPG_strip_gray_aligned.png" style="zoom:30%;" />
 
 
 * `IMAGE_FILE_NAME_strip_gray_aligned_after_ocr` Aligned POCT cropped around its outline such that it is parallel to the bottom side after OCR filtering such that the pipetting part is always left (for the cases where the POCT was not placed in the correct orientation in the template.)
-<img src="demo_image/IMG_8489_JPG_strip_gray_aligned_after_ocr3.png" style="zoom:30%;"/>
+
+  <img src="demo_image/IMG_8489_JPG_strip_gray_aligned_after_ocr3.png" style="zoom:30%;"/>
 
 
 * `IMAGE_FILE_NAME_strip_gray_hough_analysis.png` Aligned POCT cropped around its outline such that it is parallel to the bottom side detecting the pipetting spot to identify wrongly oriented POCT in the strip box. 
+
   <img src="demo_image/IMG_8489_JPG_strip_gray_hough_analysis.png" style="zoom:30%;" />
 
 
-* ``IMAGE_FILE_NAME_strip_gray_hough_analysis_candidates.png` Hough analysis candidate results. The rectangles indicate the search areas while as the circles indicate potential hits for the pipetting spot. Red rectangle and magenta circles identifies the side where the pipetting spot was detected. Note it is assumed that the control band is always opposite of the pipetting area.
-<img src="demo_image/IMG_8489_JPG_strip_gray_hough_analysis_candidates.png" style="zoom:30%;" />
+* `IMAGE_FILE_NAME_strip_gray_hough_analysis_candidates.png` Hough analysis candidate results. The rectangles indicate the search areas while as the circles indicate potential hits for the pipetting spot. Red rectangle and magenta circles identifies the side where the pipetting spot was detected. Note it is assumed that the control band is always opposite of the pipetting area.
+
+  <img src="demo_image/IMG_8489_JPG_strip_gray_hough_analysis_candidates.png" style="zoom:30%;" />
 
 
 * `IMAGE_FILE_NAME_sensor`: Aligned sensor crop showing the bands.
+
   <img src="demo_image/IMG_8489_JPG_sensor.png" style="zoom:100%;" />
 
 
 * `IMAGE_FILE_NAME_peak_overlays`: Sensor crop with colored rectangle overlay(s) indicating the area(s) where the signal for each detected band is quantified. Notice that the rectangle extends to cover the whole area under the curve, from background level through peak and back to background level.
+
   <img src="demo_image/IMG_8489_JPG_peak_overlays.png" style="zoom:50%;" />
 
 * `IMAGE_FILE_NAME_peak_background_estimation`: Control figure displaying the performance of the background estimation fit. Black dashed line is a an estimation of the background level obtained by robust linear fit of the band profile. From the estimate background trend a constant value is subtracted (resulting red solid line). This is to make sure that the signal is flat after correction, but no values are clipped.
+
   <img src="demo_image/IMG_8489_JPG_peak_background_estimation.png" style="zoom:45%;" />
 
 * `IMAGE_FILE_NAME_peak_analysis`: Control figure displaying the performance of the peak analysis. Red circle indicates the max peak height. The green dashed line is an estimate of the local background that is used to test all candidate local maxima against a threshold defined by the red dashed line. This line is calculated as the (median of the background values) + `f` * (median deviation of the background values). The factor `f`    is a user parameter and defaults to 2. The solid blue, orange and green line under the curves indicate the local span of each of the bands and indicate which part of the signal is integrated.
-<img src="demo_image/IMG_8489_JPG_peak_analysis.png" style="zoom:45%;" />
+
+  <img src="demo_image/IMG_8489_JPG_peak_analysis.png" style="zoom:45%;" />
 
 
 
@@ -458,19 +467,19 @@ See [settings file section](#Settings) for detailed description.
 
 The GUI offers several actions via the menu, the toolbar and buttons.
 
-![](ui_images\pyPOCQuantMain-01.PNG)
+<img src="ui_images/pyPOCQuantMain-01.PNG"/>
 
 1. `File menu`:
 
-   ![file](ui_images\file.JPG)
+   <img src="ui_images/file.JPG"/>
 
-   * `File`: Lets you load ( `File` $\rightarrow$ `Load settings file`) and save ( `File` $\rightarrow$ `Save settings file`) a settings file
+   * `File`: Lets you load ( `File` --> `Load settings file`) and save ( `File` --> `Save settings file`) a settings file
    
    * `Help`: Get quick instructions and open this manual
    
 2. `Toolbar`:
 
-   ![toolbar](ui_images\toolbar.JPG)
+   <img src="ui_images/toolbar.JPG"/>
 
    * `Load settings from file`: Load settings from file into the Parameter Tree.
    * ``Save settings to file`: Save current settings to file.
@@ -507,7 +516,7 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
 11. `Tools menu`:
 
-    ![tools](ui_images\tools.JPG)
+    <img src="ui_images/tools.JPG"/>
 
     * `Save POCT template`: Lets you save and print the POCT template to be used for the image acquisition.
 
@@ -515,11 +524,11 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
     * `Generate QR labels`: Lets you generate QR labels for your samples using the excel template or a csv file with a list of the names in the correct format (SAMPEID-MANUFACTURER-PLATE-Well-USER). You can define the page size, label size, position and number per page to match the format for any printable label paper as i.e from AVERY.
 
-      ![generate_labels](ui_images\generate_labels.JPG)
+      <img src="ui_images/generate_labels.JPG"/>
 
 12. `Help menu`:
 
-    ![help](ui_images\help.JPG)
+    <img src="ui_images/help.JPG"/>
 
     * `Quick instructions`
 

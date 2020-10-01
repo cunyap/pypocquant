@@ -36,7 +36,7 @@ The basis of the template mount could also be 3D printed or laser cut from any m
 
 | Fig. 1                                                  | Fig. 2                                      |
 | ------------------------------------------------------- | ------------------------------------------- |
-| ![Laufblatt_FHNW_v1-01](setup\Laufblatt_FHNW_v1-01.png) | ![POCT mount](setup\ImagingTemplate-01.png) |
+| <img src="setup/Laufblatt_FHNW_v1-01.png"/>| <img src="setup/ImagingTemplate-01.png"/>|
 
 
 
@@ -50,11 +50,9 @@ While setting up the imaging acquisition station there are three important point
 
  * Third, make sure that __the field of view does not change during a series__. For this the POCT template is well fixed on the table and the tripod with camera is not moved. If this is not the case, you will need to create a configuration file for each image, and will not be able to easily batch process them!
 
-   | Fig. 3                                      | Fig. 4                                      |
-   | ------------------------------------------- | ------------------------------------------- |
-   | ![SimpleSetup-01](setup\SimpleSetup-01.png) | ![SetupFigure-01](setup\SetupFigure-01.png) |
-
-   
+| Fig. 3            | Fig. 4                                      |
+| ----------------- | ------------------------------------------- |
+| <img src="setup/SimpleSetup-01.png"/> | <img src="setup/SetupFigure-01.png"/> |
 
 ## Image acquisition
 
@@ -82,9 +80,9 @@ Step 4:
 
 
 
-| Example image meeting all criteria's sufficiently except that the packaging is cut off. Note: pyPOCQuant will detect the orientation of the image automatically. There is no need to rotate the images |
+| Example image meeting all criteria's sufficiently except that the packaging is cut off. _Note: pyPOCQuant will detect the orientation of the image automatically. There is no need to rotate the images_ |
 | ------------------------------------------------------------ |
-| ![IMG_8489](demo_image\IMG_8489.JPG)             |
+| <img src="demo_image/IMG_8489.JPG"/>                         |
 
 
 
@@ -95,7 +93,7 @@ Step 4:
 * Follow the installer guide lines to install __pyPOCQuant__
 * Install tesseract for your operating system by following these steps: https://tesseract-ocr.github.io/tessdoc/Home.html
 
-![ui_full_empty](ui_images\ui_full_empty.JPG)
+<img src="ui_images/ui_full_empty.JPG"/>
 
 Note: For most images it is sufficient to just load an image (Step 3 & 4) and draw the sensor (Step 5) and then test the automatically determined & default parameters with (Step 7) and finally run it on all images (Step 8).
 
@@ -119,9 +117,9 @@ Step 4:
 
 * Click on one image (ideally one which shows all 3 bands) to load it. After a while (green progress bar fully to the right) the POCT area will be extracted and displayed on the top-right canvas.
 
-  | Image selected - strip extraction pending | Image selected - strip extraction done & displayed |
-  | ----------------------------------------- | -------------------------------------------------- |
-  | ![ui_loading](ui_images\ui_loading.JPG)   | ![ui_loaded](ui_images\ui_loaded.JPG)              |
+| Image selected - strip extraction pending | Image selected - strip extraction done and displayed |
+| ----------------------------------------- | -------------------------------------------------- |
+| <img src="ui_images/ui_loading.JPG"/> | <img src="ui_images/ui_loaded.JPG"/> |
 
 
 Step 5:
@@ -130,9 +128,9 @@ Step 5:
 
   The parameters `sensor_center`, `sensor_size` and `sensor_search_area` will be set automatically in this step.
 
-  | Click into the corners of the sensor to draw the sensor outline | Drawing finished. Parameters `sensor_center`, `sensor_size` and `sensor_search_area` have now been set automatically |
-  | ------------------------------------------------------------ | ------------------------------------------------------------ |
-  | ![ui_drawing](ui_images\ui_drawing.JPG)                      | ![ui_new_settings](ui_images\ui_new_settings.JPG)            |
+| Click into the corners of the sensor to draw the sensor outline | Drawing finished. Parameters `sensor_center`, `sensor_size` and `sensor_search_area` have now been set automatically |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| <img src="ui_images/ui_drawing.JPG"/> |  <img src="ui_images/ui_new_settings.JPG"/> |
 
 
 Step 6:
@@ -141,25 +139,25 @@ Step 6:
 
 | Not properly aligned control band line (vertical violet line). `peak_expected_relative_location`=(0.22, 0.5, 0.7) | Properly aligned band lines `peak_expected_relative_location`=(0.22, 0.5, 0.77) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![ui_moving_bar](ui_images\ui_moving_bar.JPG)                | ![ui_bar_aligned](ui_images\ui_bar_aligned.JPG)              |
+|  <img src="ui_images/ui_moving_bar.JPG"/>           | !<img src="ui_images/ui_bar_aligned.JPG"/>       |
 
 Step 7 
 
 * Change the band labels for t2, t1 and ctl band according to the test analyzed. For example `sensor_band_names=(IgG, IgM, Ctl)`. These names will be used as prefixes in the header of the result table.
 
-Step 7:
+Step 8:
 
 * Hit `Test parameters` and check the result based on the quality control images. If you get false positive detections for weak signals increase the advanced parameter `sensor_thresh_factor` and hit test again.
 
 * If the result looks good (check the quality control images `IMAGE_NAME_peak_overlays control image`, and `IMAGE_NAME_peak_analysis control image` and the entries in the `quantification data.csv` file), you can continue. Otherwise adjust the parameters further, look up the advanced parameters in the manual, or check the common problems and solutions below.
 
-  | IMAGE_NAME_peak_overlays control image                       | IMAGE_NAME_peak_analysis control image                       |
-  | ------------------------------------------------------------ | ------------------------------------------------------------ |
-  | ![IMG_8489_JPG_peak_overlays](demo_image\IMG_8489_JPG_peak_overlays.png) | ![IMG_8489_JPG_peak_analysis](demo_image\IMG_8489_JPG_peak_analysis.png) |
+| IMAGE_NAME_peak_overlays control image                 | IMAGE_NAME_peak_analysis control image                 |
+| ------------------------------------------------------ | ------------------------------------------------------ |
+| <img src="demo_image/IMG_8489_JPG_peak_overlays.png"/> | <img src="demo_image/IMG_8489_JPG_peak_analysis.png"/> |
 
   
 
-Step 8:
+Step 9:
 
 * Hit `Run` to batch analyze all images in the folder in parallel.
 
@@ -181,8 +179,9 @@ __Solution__: Increase the `sensor threshold factor` (Fig. 6)
 
 | Fig 5 `sensor threshold factor=1`                            | Fig 6 `sensor threshold factor=2`                            |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![Img1966_jpg_peak_analysis_th1](problem_solutions\Img1966_jpg_peak_analysis_th1.png) | ![Img1966_jpg_peak_analysis](problem_solutions\Img1966_jpg_peak_analysis.png) |
-| ![Img1966_jpg_peak_overlays_th1](problem_solutions\Img1966_jpg_peak_overlays_th1.png) | ![Img1966_jpg_peak_overlays_th2](problem_solutions\Img1966_jpg_peak_overlays_th2.png) |
+| <img src="problem_solutions/Img1966_jpg_peak_analysis_th1.png"/> | <img src="problem_solutions/Img1966_jpg_peak_analysis.png"/> |
+| <img src="problem_solutions/Img1966_jpg_peak_overlays_th1.png"/> | <img src="problem_solutions/Img1966_jpg_peak_overlays_th2.png"/> |
+
 
 __Problem__: _One or more bands were missed_ or _the wrong band(s) were extracted_ (Fig. 7)
 
@@ -190,8 +189,8 @@ __Solution__: Adjust the `Peak expected relative location` parameter for the ban
 
 | Fig 7                                                        | Fig 8                                                        |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![Img1966_jpg_peak_analysis_wb](problem_solutions\Img1966_jpg_peak_analysis_wb.png) | ![Img1966_jpg_peak_analysis](problem_solutions\Img1966_jpg_peak_analysis.png) |
-| ![Img1966_jpg_peak_overlays_wb](problem_solutions\Img1966_jpg_peak_overlays_wb.png) | ![Img1966_jpg_peak_overlays_th2](problem_solutions\Img1966_jpg_peak_overlays_th2.png) |
+| <img src="problem_solutions/Img1966_jpg_peak_analysis_wb.png"/> | <img src="problem_solutions/Img1966_jpg_peak_analysis.png"/>  |
+| <img src="problem_solutions/Img1966_jpg_peak_overlays_wb.png"/> | <img src="problem_solutions/Img1966_jpg_peak_overlays_th2.png"/>  |
 
 __Problem__: Almost no pixels are considered for quantification (Fig. 9)
 
@@ -199,7 +198,7 @@ __Solution__: Reduce the `sensor border x|y` values to consider more pixels of t
 
 | Fig 9 `sensor border x|y=25`                                 | Fig 10  `sensor border x|y=7`                                |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![Img1966_jpg_peak_overlays_narrow](problem_solutions\Img1966_jpg_peak_overlays_narrow.png) | ![Img1966_jpg_peak_overlays](problem_solutions\Img1966_jpg_peak_overlays.png) |
+| <img src="problem_solutions/Img1966_jpg_peak_overlays_narrow.png"/> | <img src="problem_solutions/Img1966_jpg_peak_overlays.png"/> |
 
 __Problem__: I have a lot of images to be processed and it is slow.
 
@@ -211,7 +210,7 @@ __Solution__: Select the checkbox `try to correct strip orientation`. This will 
 
 | Fig 11                                                       | Fig 12                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![IMG_9524_JPG_strip_gray_hough_analysis_candidates](problem_solutions\IMG_9524_JPG_strip_gray_hough_analysis_candidates.png) | ![IMG_9524_JPG_strip_gray_hough_analysis](problem_solutions\IMG_9524_JPG_strip_gray_hough_analysis.png) |
+| <img src="problem_solutions/IMG_9524_JPG_strip_gray_hough_analysis_candidates.png"/>  | <img src="problem_solutions/IMG_9524_JPG_strip_gray_hough_analysis.png"/>  |
 
 __Problem__: I have a lot of images from with different POCT cartridge designs from different manufacturers taken with the same camera but my config file does only work for one type.
 
@@ -223,7 +222,7 @@ __Solution__: Unfortunately yes. As they come in any shape the software needs so
 
 | Fig 13                                        |
 | --------------------------------------------- |
-| ![NewPCTDesign-01](setup\NewPCTDesign-01.png) |
+| <img src="setup/NewPCTDesign-01.png"/> |
 
 
 
