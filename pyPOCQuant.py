@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 from pypocquant.pipeline import run_pipeline
-from pypocquant.lib.settings import load_settings, save_settings
+from pypocquant.lib.settings import default_settings, load_settings, save_settings
 from pypocquant.lib.utils import set_tesseract_exe
 
 __exe__ = "pyPOCQuant"
@@ -71,27 +71,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     # Default parameter values
-    DEFAULT_PARAMETERS = {
-        "raw_auto_stretch": False,
-        "raw_auto_wb": False,
-        "strip_try_correct_orientation": True,
-        "strip_try_correct_orientation_rects": (0.52, 0.15, 0.09),
-        "strip_text_to_search": "COVID",
-        "strip_text_on_right": True,
-        "qr_code_border": 40,
-        "sensor_size": (61, 249),
-        "sensor_center": (178, 667),
-        "subtract_background": True,
-        "sensor_border": (7, 7),
-        "perform_sensor_search": True,
-        "sensor_thresh_factor": 2,
-        "sensor_search_area": (71, 259),
-        "peak_expected_relative_location": (0.25, 0.53, 0.79),
-        "force_fid_search": False,
-        "sensor_band_names": ('igm', 'igg', 'ctl'),
-        "verbose": True,
-        "qc": True
-    }
+    DEFAULT_PARAMETERS = default_settings()
 
     # Create default settings file?
     if args["create_settings_file"] != "":
