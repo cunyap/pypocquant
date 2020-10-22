@@ -18,6 +18,7 @@ from pypocquant.lib.io import load_and_process_image
 from pypocquant.lib.processing import BGR2Gray
 from pypocquant.lib.settings import save_settings
 from pypocquant.lib.utils import get_iso_date_from_image, get_exif_details, create_quality_control_images
+from pypocquant.lib.utils import set_tesseract_exe
 
 plt.switch_backend('qt5agg')
 
@@ -177,6 +178,9 @@ def run_pipeline(
     :param max_workers int
         Number of max cores to use for running the pipeline
     """
+
+    # Set the path to the tesseract executable
+    set_tesseract_exe()
 
     # Make sure the results folder exists
     results_folder_path.mkdir(exist_ok=True)

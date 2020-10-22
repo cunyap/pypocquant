@@ -7,7 +7,6 @@ import sys
 
 from pypocquant.pipeline import run_pipeline
 from pypocquant.lib.settings import default_settings, load_settings, save_settings
-from pypocquant.lib.utils import set_tesseract_exe
 
 __exe__ = "pyPOCQuant"
 __version__ = "0.1.0"
@@ -83,9 +82,6 @@ if __name__ == '__main__':
 
         # We can exit now
         sys.exit(0)
-
-    # Set the path to the tesseract executable
-    set_tesseract_exe()
 
     # Get the rest of the arguments
 
