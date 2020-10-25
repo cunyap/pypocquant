@@ -16,13 +16,13 @@ from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_line
 from pypocquant.lib.io import load_and_process_image
 
 
-def run_pool(files, output_folder_path, undefined_path, max_workers=4):
+def run_pool(files, input_folder_path, output_folder_path, undefined_path, max_workers=4):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        run_n = partial(run, output_folder_path=output_folder_path, undefined_path=undefined_path)
+        run_n = partial(run, input_folder_path=input_folder_path, output_folder_path=output_folder_path, undefined_path=undefined_path)
         results = list(tqdm(executor.map(run_n, files), total=len(files)))
 
 
-def run(filename, output_folder_path, undefined_path):
+def run(filename, input_folder_path, output_folder_path, undefined_path):
 
     # Load  the image
     image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch=False, raw_auto_wb=False)
@@ -30,7 +30,7 @@ def run(filename, output_folder_path, undefined_path):
         return
 
     # Find the location of the barcodes
-    barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor = \
+    barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor, fid_128 = \
         try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
             image,
             lower_bound_range=(0, 5, 15, 25, 35),
@@ -45,7 +45,7 @@ def run(filename, output_folder_path, undefined_path):
     # Curiously, re-using the best percentiles we found earlier is *not* guaranteed
     # to succeed. Therefore, we search again.
     if image_was_rotated:
-        barcode_data, new_fid, new_manufacturer, new_plate, new_well, new_user, _, _, _, _ = \
+        barcode_data, new_fid, new_manufacturer, new_plate, new_well, new_user, _, _, _, _, _ = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
                 lower_bound_range=(0, 5, 15, 25, 35),
@@ -142,4 +142,4 @@ if __name__ == '__main__':
     filenames = sorted(os.listdir(str(input_folder_path)))
 
     # Get quantification results
-    run_pool(filenames, output_folder_path, undefined_path, max_workers)
+    run_pool(filenames, input_folder_path, output_folder_path, undefined_path, max_workers)
