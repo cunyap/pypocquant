@@ -6,8 +6,7 @@ from pathlib import Path
 import sys
 
 from pypocquant.pipeline import run_pipeline
-from pypocquant.lib.settings import load_settings, save_settings
-from pypocquant.lib.utils import set_tesseract_exe
+from pypocquant.lib.settings import default_settings, load_settings, save_settings
 
 __exe__ = "pyPOCQuant"
 __version__ = "0.1.0"
@@ -71,27 +70,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     # Default parameter values
-    DEFAULT_PARAMETERS = {
-        "raw_auto_stretch": False,
-        "raw_auto_wb": False,
-        "strip_try_correct_orientation": True,
-        "strip_try_correct_orientation_rects": (0.52, 0.15, 0.09),
-        "strip_text_to_search": "COVID",
-        "strip_text_on_right": True,
-        "qr_code_border": 40,
-        "sensor_size": (61, 249),
-        "sensor_center": (178, 667),
-        "subtract_background": True,
-        "sensor_border": (7, 7),
-        "perform_sensor_search": True,
-        "sensor_thresh_factor": 2,
-        "sensor_search_area": (71, 259),
-        "peak_expected_relative_location": (0.25, 0.53, 0.79),
-        "force_fid_search": False,
-        "sensor_band_names": ('igm', 'igg', 'ctl'),
-        "verbose": True,
-        "qc": True
-    }
+    DEFAULT_PARAMETERS = default_settings()
 
     # Create default settings file?
     if args["create_settings_file"] != "":
@@ -103,9 +82,6 @@ if __name__ == '__main__':
 
         # We can exit now
         sys.exit(0)
-
-    # Set the path to the tesseract executable
-    set_tesseract_exe()
 
     # Get the rest of the arguments
 
@@ -195,25 +171,6 @@ if __name__ == '__main__':
     run_pipeline(
         input_folder_path,
         results_folder_path,
-        raw_auto_stretch=settings['raw_auto_stretch'],
-        raw_auto_wb=settings['raw_auto_wb'],
-        strip_try_correct_orientation=settings['strip_try_correct_orientation'],
-        strip_try_correct_orientation_rects=settings['strip_try_correct_orientation_rects'],
-        strip_text_to_search=settings['strip_text_to_search'],
-        strip_text_on_right=settings['strip_text_on_right'],
-        min_sensor_score=0.0,   # This is currently ignored
-        qr_code_border=settings['qr_code_border'],
-        perform_sensor_search=settings['perform_sensor_search'],
-        sensor_size=settings['sensor_size'],
-        sensor_center=settings['sensor_center'],
-        sensor_search_area=settings['sensor_search_area'],
-        sensor_thresh_factor=settings['sensor_thresh_factor'],
-        sensor_border=settings['sensor_border'],
-        peak_expected_relative_location=settings['peak_expected_relative_location'],
-        subtract_background=settings['subtract_background'],
-        force_fid_search=settings['force_fid_search'],
-        sensor_band_names=settings['sensor_band_names'],
-        verbose=settings['verbose'],
-        qc=settings['qc'],
+        **settings,
         max_workers=max_workers
     )
