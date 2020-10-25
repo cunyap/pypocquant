@@ -908,7 +908,8 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                             # Try extracting the FID
 
                             match = re.search(
-                                r'^(?P<fid>[A-Z]+[0-9]{6,18})-(?P<manufacturer>.+)-Plate (?P<plate>\d{1,3})-Well (?P<well>.+)-(?P<user>.+)$',
+                                # r'^(?P<fid>[A-Z]+[0-9]{6,18})-(?P<manufacturer>.+)-Plate (?P<plate>\d{1,3})-Well (?P<well>.+)-(?P<user>.+)$',
+                                r'^(?P<fid>[A-Z]{0,18}[0-9]{0,18})-(?P<manufacturer>.+)-Plate (?P<plate>\d{1,3})-Well (?P<well>.+)-(?P<user>.+)$',
                                 barcode.data.decode('utf-8'))
                             if match is None:
 

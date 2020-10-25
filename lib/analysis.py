@@ -1204,7 +1204,7 @@ def read_patient_data_by_ocr(
                     continue
 
                 # Test for fid
-                match = re.search(r'^(?P<fid>[A-Z]+[0-9]{6,18}).*', current_text)
+                match = re.search(r'^(?P<fid>[A-Z]{0,18}[0-9]{0,18}).*', current_text)
                 if match is None:
                     continue
                 else:
