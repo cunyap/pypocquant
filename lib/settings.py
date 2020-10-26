@@ -45,3 +45,16 @@ def save_settings(settings_dictionary, filename):
                 f.write(f"{key}='{settings_dictionary[key]}'\n")
             else:
                 f.write(f"{key}={settings_dictionary[key]}\n")
+
+
+def load_list_file(filename):
+    """Loads list from file and returns them as list."""
+    file_content_list = []
+    with open(filename, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            line_text = line.rstrip().replace('\n', '').replace(';', ',').replace('\t', ',').replace(' ', '')
+            for el in line_text.split(','):
+                if el.strip():
+                    file_content_list.append(el.strip())
+    return file_content_list

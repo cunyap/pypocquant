@@ -1208,9 +1208,10 @@ def read_patient_data_by_ocr(
             if current_text != "":
 
                 # Test for manufacturer name
-                if current_text.upper() in known_manufacturers:
-                    manufacturer = current_text.upper()
-                    continue
+                for m in known_manufacturers:
+                    if m.upper() in current_text.upper():
+                        manufacturer = m.upper()
+                        continue
 
                 # Test for fid
                 match = re.search(r'^(?P<fid>[A-Z]{0,18}[0-9]{0,18}).*', current_text)
