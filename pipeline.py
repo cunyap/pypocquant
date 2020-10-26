@@ -14,7 +14,7 @@ from pypocquant.lib.barcode import rotate_if_needed_fh, find_strip_box_from_barc
     try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, get_fid_numeric_value_fh, \
     align_box_with_image_border_fh, try_get_fid_from_rgb, try_extracting_barcode_from_box_with_rotations
 from pypocquant.lib.consts import Issue
-from pypocquant.lib.io import load_and_process_image
+from pypocquant.lib.io import load_and_process_image, is_raw
 from pypocquant.lib.processing import BGR2Gray
 from pypocquant.lib.settings import save_settings
 from pypocquant.lib.utils import get_iso_date_from_image, get_exif_details, create_quality_control_images
@@ -551,12 +551,14 @@ def run(
 
     if strip_try_correct_orientation:
         # Use the Hough transform to look for expected details in the
-        # strip.
+        # strip. If needed, ask the function to perform an intensity stretch.
+        stretch = is_raw(filename) and raw_auto_stretch is False
         strip_gray_for_analysis, strip_for_analysis, qc_image, was_rotated, _, _ = \
             use_hough_transform_to_rotate_strip_if_needed(
                 strip_gray_for_analysis,
                 strip_try_correct_orientation_rects,
-                strip_for_analysis,
+                stretch=stretch,
+                img=strip_for_analysis,
                 qc=qc
             )
 

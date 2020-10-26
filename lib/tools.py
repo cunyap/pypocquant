@@ -9,6 +9,7 @@ def extract_strip(image,
                   qr_code_border,
                   strip_try_correct_orientation,
                   strip_try_correct_orientation_rects=(0.52, 0.15, 0.09),
+                  stretch_for_hough=False,
                   strip_text_to_search="",
                   strip_text_on_right=True
     ):
@@ -32,6 +33,10 @@ def extract_strip(image,
                                  with respect to the center of the image.
              rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
                                  with respect to the center of the image.
+
+
+    :param stretch_for_hough: bool (default, False)
+        Set to True to apply auto-stretch to the image for Hough detection (1, 99 percentile).
 
     :param strip_text_to_search: str
         Text to search on the strip to assess orientation. Set to "" to skip.
@@ -60,7 +65,7 @@ def extract_strip(image,
     # we do not have enough information to extract the strip box.
     # @TODO: Actually check.
     if best_score < 3:
-        return None, "Failed decoding QR codes to extract POCT position."
+        return None, "Failed decoding QR codes to extract POCT position.", [], []
 
     # Rotate the image if needed
     image_was_rotated, image, image_log = rotate_if_needed_fh(
@@ -105,7 +110,7 @@ def extract_strip(image,
         qc=False)
 
     if box is None or box.shape[0] == 0 or box.shape[1] == 0:
-        return None, "Could not extract POCT from barcode data."
+        return None, "Could not extract POCT from barcode data.", [], []
 
     # Convert box to gray value
     box_gray = BGR2Gray(box)
@@ -129,7 +134,8 @@ def extract_strip(image,
             use_hough_transform_to_rotate_strip_if_needed(
                 strip_gray_for_analysis,
                 strip_try_correct_orientation_rects,
-                strip_for_analysis,
+                stretch=stretch_for_hough,
+                img=strip_for_analysis,
                 qc=False
             )
 

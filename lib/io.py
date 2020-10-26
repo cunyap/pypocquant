@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import cv2
 import rawpy
 import numpy as np
@@ -78,3 +80,22 @@ def load_and_process_image(
 
     # Return the image
     return image
+
+
+def is_raw(filename: str) -> bool:
+    """Check whether the image is one of the supported RAW images
+     (by checking the file extension.
+     :param filename: Full file name.
+     :type filename: str
+
+     :return True if the image is RAW, false otherwise.
+     """
+
+    # Check the extension
+    lower_filename = filename.lower()
+    if lower_filename.endswith(".nef") or \
+            lower_filename.endswith(".cr2") or \
+            lower_filename.endswith(".arw"):
+        return True
+
+    return False

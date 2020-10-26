@@ -13,7 +13,7 @@ from scipy.ndimage.filters import gaussian_filter1d
 from scipy.ndimage.morphology import binary_fill_holes, binary_opening
 from scipy.signal import find_peaks
 from scipy.spatial.distance import cdist
-from skimage import filters
+from skimage import filters, exposure
 from sklearn.linear_model import HuberRegressor
 
 from pypocquant.lib import consts
@@ -888,6 +888,7 @@ def get_rectangles_from_image_and_rectangle_props(
 def use_hough_transform_to_rotate_strip_if_needed(
         img_gray,
         rectangle_props=(0.52, 0.15, 0.09),
+        stretch=False,
         img=None,
         qc=False
 ):
@@ -906,6 +907,11 @@ def use_hough_transform_to_rotate_strip_if_needed(
                                  with respect to the center of the image.
              rectangle_props[2]: relative distance of the left edge of the left rectangle
                                  with respect to the center of the image.
+
+
+    :param stretch: bool
+        Set to True to apply auto-stretch to the image for Hough detection (1, 99 percentile).
+        The *original* image will be rotated, if needed.
 
     :param img: np.ndarray or None (default)
         Apply correction also to this image, if passed.
@@ -931,6 +937,9 @@ def use_hough_transform_to_rotate_strip_if_needed(
     # Pre-process the image to make the detection of circles more robust
     try:
         img_work = img_gray.copy()
+        if stretch:
+            pLb, pUb = np.percentile(img_work, (1, 99))
+            img_work = exposure.rescale_intensity(img_work, in_range=(pLb, pUb))
         img_work = cv2.medianBlur(img_work, 13)
         img_work = cv2.Laplacian(img_work, cv2.CV_8UC1, ksize=5)
         img_work = cv2.dilate(img_work, (3, 3))
