@@ -5,7 +5,7 @@ setup(
     version='0.0.1',
     packages=['pyPOCQuant', 'pyPOCQuant.lib'],
     url='',
-    license='t.b.a.',
+    license='GPLv3',
     author='Andreas P. Cuny; Aaron Ponti',
     author_email='andreas.cuny@bsse.ethz.ch; aaron.ponti@bsse.ethz.ch',
     description='Pipline to batch detect and quantify point of care test strips from images',
