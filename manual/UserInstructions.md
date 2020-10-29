@@ -73,7 +73,7 @@ sensor_search_area=(71, 259)
 sensor_thresh_factor=2.0
 raw_auto_stretch=False
 raw_auto_wb=False
-strip_try_correct_orientation=True
+strip_try_correct_orientation=False
 strip_try_correct_orientation_rects=(0.52, 0.15, 0.09)
 strip_text_to_search='COVID'
 strip_text_on_right=True
@@ -181,7 +181,7 @@ sensor_search_area=(71, 259)
 sensor_thresh_factor=2.0
 raw_auto_stretch=False
 raw_auto_wb=False
-strip_try_correct_orientation=True
+strip_try_correct_orientation=False
 strip_try_correct_orientation_rects=(0.52, 0.15, 0.09)
 strip_text_to_search='COVID'
 strip_text_on_right=True
@@ -283,13 +283,14 @@ These parameters will most likely work with the default values above.
 
 * Whether to automatically try to rotate a POCT that was mistakenly placed on the template facing the wrong direction (and where the control band is on the left instead of on the right). The pipetting inlet will be searched in the POCT; the inlet is assumed to be found on the side opposite to the control band, and always on the left. If found on the right, the image will be rotated.
 * Possible values: `True` or `False`
-* Recommended: `True`
+* Default: `False` 
+* If set to `True`, make sure to properly set the `strip_try_correct_orientation_rects` parameters below!
 
 ##### strip_try_correct_orientation_rects
 
 * Parameters for defining two rectangles left and right from the sensor center to be used to detect the pipetting inlet. The first parameter, `Relative height factor`, defines the relative height of the rectangles with respect to the strip. The second parameter, `Relative center cut-off`, defines the relative offset from the sensor center and therefore the width of the rectangle. Finally, the third parameter, `Relative border cut-off`, defines the relative offset from the strip's left and right borders and hence the width of the search rectangle.
 * Possible values: `(0:1, 0:1, 0:1)`
-* Recommended: `(0.52, 0.15, 0.09)`
+* Default: `(0.52, 0.15, 0.09)`
 
 ##### strip_text_to_search
 
@@ -303,7 +304,8 @@ These parameters will most likely work with the default values above.
 ##### force_fid_search
 
 * If force fid search is activated, try hard (and slow!) to find an FID on a barcode or QR code label on the image identifying the sample.
-* force_fid_search=True
+* Possible values: `True` or `False`
+* Recommended: `False`
 
 ## Results <a name="resultsdescription"></a>
 
