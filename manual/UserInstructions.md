@@ -537,6 +537,10 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
       <img src="ui_images/generate_labels.JPG"/>
 
+ * `Split images by type`: To simplify the generation of a config file valid for all images of the same kind in a folder. If images from different POCT manufacturers were acquired but all stored in the same folder and the QR labels used to encode this information (MANUFACTURER) this tool can be used to split the images into subfolder by manufacturer name. Not identifiable images will be saved in a folder named UNDEFINED. An optional comma separated list with expected manufacturer names can be added to potentially identify some of the UNDEFINED images using OCR. Input folder defines the folder containing all the images and output folder where the split images should be saved. Number of cores lets you define how many images will be processed in parallel. 
+
+      <img src="ui_images/tool_split_images.JPG"/>
+
 12. `Help menu`:
 
     <img src="ui_images/help.JPG"/>
