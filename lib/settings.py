@@ -6,7 +6,7 @@ def default_settings():
     return {
         "raw_auto_stretch": False,
         "raw_auto_wb": False,
-        "strip_try_correct_orientation": True,
+        "strip_try_correct_orientation": False,
         "strip_try_correct_orientation_rects": (0.52, 0.15, 0.09),
         "strip_text_to_search": "COVID",
         "strip_text_on_right": True,
