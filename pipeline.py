@@ -64,7 +64,7 @@ def run_pipeline(
         results_folder_path: Path,
         raw_auto_stretch: bool = False,
         raw_auto_wb: bool = False,
-        strip_try_correct_orientation: bool = True,
+        strip_try_correct_orientation: bool = False,
         strip_try_correct_orientation_rects: tuple = (0.52, 0.15, 0.09),
         strip_text_to_search: str = "COVID",
         strip_text_on_right: bool = True,
