@@ -535,7 +535,7 @@ The GUI offers several actions via the menu, the toolbar and buttons.
 
     * `Save QR labels template` Lets you save an Excel template to be used to generate QR code labels for all your samples from a list.
 
-    * `Generate QR labels`: Lets you generate QR labels for your samples using the excel template or a csv file with a list of the names in the correct format: `SAMPEID-MANUFACTURER-PLATE-WELL-USERDATA` (use the `USERDATA` field for **very short** annotations, and replace blank spaces with `_`) . You can define the page size, label size, position and number per page to match the format for any printable label paper as, for instance, from AVERY.
+    * `Generate QR labels`: Lets you generate QR labels for your samples using the excel template or a csv file with a list of the names in the correct format: `SAMPEID-MANUFACTURER-PLATE-WELL-USERDATA`. You can use the `USERDATA` field for **very short** annotations; please make sure not to use dashes (`-`) in this field, but replace them with underscores (`_`). You can define the page size, label size, position and number per page to match the format for any printable label paper as, for instance, from AVERY.
 
       <img src="ui_images/generate_labels.JPG"/>
 
