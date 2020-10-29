@@ -3,10 +3,11 @@ import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 
+import cv2
 import os
+import rawpy
 from pathlib import Path
 from tqdm import tqdm
-import multiprocessing
 
 from pypocquant.lib.analysis import read_patient_data_by_ocr
 from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, rotate_if_needed_fh, \
@@ -15,14 +16,13 @@ from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_line
 from pypocquant.lib.io import load_and_process_image
 
 
-def run_pool(files, input_folder_path, output_folder_path, undefined_path, max_workers=4, manufacturer_names=[]):
+def run_pool(files, input_folder_path, output_folder_path, undefined_path, max_workers=4):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        run_n = partial(run, input_folder_path=input_folder_path, output_folder_path=output_folder_path,
-                        undefined_path=undefined_path, manufacturer_names=manufacturer_names)
+        run_n = partial(run, input_folder_path=input_folder_path, output_folder_path=output_folder_path, undefined_path=undefined_path)
         results = list(tqdm(executor.map(run_n, files), total=len(files)))
 
 
-def run(filename, input_folder_path, output_folder_path, undefined_path, manufacturer_names):
+def run(filename, input_folder_path, output_folder_path, undefined_path):
 
     # Load  the image
     image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch=False, raw_auto_wb=False)
@@ -74,7 +74,7 @@ def run(filename, input_folder_path, output_folder_path, undefined_path, manufac
                            box_start_y:box_rect[1],
                            box_rect[2]:box_rect[3]
                            ]
-            _, manufacturer = read_patient_data_by_ocr(area_for_ocr, known_manufacturers=manufacturer_names)
+            _, manufacturer = read_patient_data_by_ocr(area_for_ocr)
 
     if manufacturer != "":
         target_path = Path(output_folder_path / manufacturer.upper())
@@ -120,14 +120,6 @@ if __name__ == '__main__':
         help='Max number of cores to use'
     )
 
-    # List of manufacturer names
-    parser.add_argument(
-        '-m',
-        '--manufacturer_names',
-        nargs='+',
-        help='<names of manufacturers present on the image on i.e qr code labels to be detected with OCR.',
-        equired=False)
-
     # Parse the arguments
     args = vars(parser.parse_args())
 
@@ -136,11 +128,6 @@ if __name__ == '__main__':
         max_workers = 1
     else:
         max_workers = int(args["max_workers"])
-        # limit max_workers by the max available one
-        if max_workers > multiprocessing.cpu_count():
-            max_workers = multiprocessing.cpu_count()
-
-    manufacturer_names = args["manufacturer_names"]
 
     # Input and output dirs
     input_folder_path = Path(args['folder'])
@@ -152,7 +139,7 @@ if __name__ == '__main__':
     undefined_path.mkdir(parents=True, exist_ok=True)
 
     # Get the list of all files
-    file_names = sorted(os.listdir(str(input_folder_path)))
+    filenames = sorted(os.listdir(str(input_folder_path)))
 
     # Get quantification results
-    run_pool(file_names, input_folder_path, output_folder_path, undefined_path, max_workers, manufacturer_names)
+    run_pool(filenames, input_folder_path, output_folder_path, undefined_path, max_workers)
