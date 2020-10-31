@@ -3,7 +3,7 @@ import getpass
 import rawpy
 import imageio
 from pathlib import Path
-from sys import platform
+import platform
 import pytesseract
 import exifread
 from datetime import datetime
