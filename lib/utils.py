@@ -181,16 +181,15 @@ def is_on_path(prog):
 
 
 def set_tesseract_exe():
-    # @todo improve.
-    if is_on_path('Tesseract-OCR'):
+    if is_on_path('tesseract'):
         return
     else:
         # Check default installations
-        if platform == "linux" or platform == "linux2":
+        if platform.system() == "Linux":
             pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
-        elif platform == "darwin":
-            pytesseract.pytesseract.tesseract_cmd = r'/Users/{}/tesseract-ocr/tesseract'.format(getpass.getuser())
-        elif platform == "win32":
+        elif platform.system() == "Darwin":
+            pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
+        elif platform.system() == "Windows":
             pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 
