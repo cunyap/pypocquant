@@ -118,20 +118,18 @@ if __name__ == '__main__':
     # Load the settings
     settings = load_settings(settings_file)
 
+    # If the max_workers parameter is in the settings file, drop it
+    if 'max_workers' in settings:
+        del settings['max_workers']
+
     # Make sure that the settings file is usable
     if DEFAULT_PARAMETERS.keys() != settings.keys():
         setKeysDiffA = set(DEFAULT_PARAMETERS.keys()) - set(settings.keys())
         setKeysDiffB = set(settings.keys()) - set(DEFAULT_PARAMETERS.keys())
         setKeysDiff = setKeysDiffA.union(setKeysDiffB)
-        if len(setKeysDiff) == 1 and 'max_workers' in setKeysDiff:
-            # This is an acceptable difference. pyPOCQuantUI stores the max_workers
-            # parameters in the settings; pyPOCQuant does not and only accepts the
-            # value via a command line argument.
-            pass
-        else:
-            print(f"The settings file {settings_file} is not valid.")
-            print(f"Please check the following keys: {str(setKeysDiff)}.")
-            sys.exit(1)
+        print(f"The settings file {settings_file} is not valid.")
+        print(f"Please check the following keys: {str(setKeysDiff)}.")
+        sys.exit(1)
 
     # Max number of cores
     if args["max_workers"] == "":
