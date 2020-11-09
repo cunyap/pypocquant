@@ -372,18 +372,14 @@ Structure and description of the result table:
 Each analyzed image is assigned an integer `issue`:
 
 * 0: no issue, the analysis could be performed successfully
-
 * 1: barcode extraction failed
-
 * 2: FID extraction failed
-
-* 3: poor strip alignment
-
-* 4: sensor extraction failed
-
-* 5: peak/band quantification failed
-
-* 6: control band missing
+* 3: strip box extraction failed
+* 4: strip extraction failed
+* 5: poor strip alignment
+* 6: sensor extraction failed
+* 7: peak/band quantification failed
+* 8: control band missing
 
 ### Quality control images <a name="resultimages"></a>
 

@@ -117,6 +117,8 @@ def extract_strip(image,
 
     # Crop the strip from the box while correcting for possible rotation
     strip_gray, strip = extract_rotated_strip_from_box(box_gray, box)
+    if strip_gray is None:
+        return None, "Could not extract strip.", None, None
 
     # Make a copy of the strip images for analysis
     strip_for_analysis = strip.copy()

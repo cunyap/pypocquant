@@ -445,7 +445,7 @@ def run(
     if box is None or box.shape[0] == 0 or box.shape[1] == 0:
         image_log.append(f"File {filename}: could not extract strip box. Skipping!")
 
-        # Add issue to the results
+        # Add issue to the results and return
         results_row["issue"] = Issue.STRIP_BOX_EXTRACTION_FAILED.value
         row_data = {}
         row_data.update(results_row)
@@ -530,6 +530,17 @@ def run(
 
     # Crop the strip from the box while correcting for possible rotation
     strip_gray, strip = extract_rotated_strip_from_box(box_gray, box)
+    if strip_gray is None:
+
+        # Log failure
+        image_log.append(f"File {filename}: could not extract strip. Skipping!")
+
+        # Add issue to the results and return
+        results_row["issue"] = Issue.STRIP_EXTRACTION_FAILED.value
+        row_data = {}
+        row_data.update(results_row)
+        return row_data, image_log
+
 
     # Make a copy of the strip images for analysis
     strip_for_analysis = strip.copy()
