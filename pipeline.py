@@ -634,6 +634,17 @@ def run(
         )
         sensor_score = 1.0
 
+    # Make sure that the sensor could be extracted
+    if sensor.shape[0] == 0 or sensor.shape[1] == 0:
+        image_log.append(f"File {filename}: could not extract the sensor. Skipping!")
+
+        # Add issue to the results and return
+        results_row["issue"] = Issue.SENSOR_EXTRACTION_FAILED.value
+        row_data = {}
+        row_data.update(results_row)
+        return row_data, image_log
+
+
     # Add the sensor score to the results
     # results_row["sensor_score"] = sensor_score
 
