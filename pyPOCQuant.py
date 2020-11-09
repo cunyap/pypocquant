@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 import sys
 
-from pypocquant.pipeline import run_pipeline
+from pypocquant.lib.pipeline import run_pipeline
 from pypocquant.lib.settings import default_settings, load_settings, save_settings
 
 __exe__ = "pyPOCQuant"
