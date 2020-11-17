@@ -311,7 +311,7 @@ def run(
     results_row["iso_date"] = iso_date
     results_row["iso_time"] = iso_time
 
-    # # Extract additional ISO information
+    # Extract additional ISO information
     exp_time, f_number, focal_length_35_mm, iso_speed = get_exif_details(str(input_folder_path / filename))
     results_row["exp_time"] = exp_time
     results_row["f_number"] = f_number
