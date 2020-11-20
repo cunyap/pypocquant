@@ -1093,7 +1093,70 @@ def rotate_if_needed_fh(image, barcode_data, image_log, verbose=True):
                 except:
                     positions[key] = None
 
-    # Use the information to understand the orientation of the image
+    # Use the information to understand the orientation of the image.
+    # Find the four corners of the box (additional QR codes can be used
+    # to make the detection more robust).
+    G_TL = None
+    if positions["TL"] is not None or positions["TL_P"] is not None:
+        G_TL = positions["TL"] if positions["TL"] is not None else positions["TL_P"]
+
+    G_BL = None
+    if positions["BL"] is not None or positions["L_G"] is not None:
+        G_BL = positions["BL"] if positions["BL"] is not None else positions["L_G"]
+
+    G_BR = None
+    if positions["BR"] is not None or positions["R_G"] is not None:
+        G_BR = positions["BR"] if positions["BR"] is not None else positions["R_G"]
+
+    G_TR = None
+    if positions["TR"] is not None:
+        G_TR = positions["TR"]
+    else:
+        if G_TL is not None and G_BL is not None and G_BR is not None:
+            G_TR["x"] = G_TL["x"] + (G_BR["x"] - G_BL["x"])
+            G_TR["y"] = G_TL["y"] + (G_BR["y"] - G_BL["y"])
+
+    # Now use the relative position of the four corners to
+    # determine the orientation of the image.
+
+    if G_TL["x"] < G_TR["x"] and G_TL["y"] < G_BL["y"] and \
+            G_TL["x"] < G_BR["x"] and G_TL["y"] < G_BR["y"]:
+        # Case 1: the image is already oriented correctly
+        image_was_rotated = False
+        return image_was_rotated, image, image_log
+
+    elif G_TR["x"] < G_BR["x"] and G_TR["y"] < G_TL["y"] and \
+            G_TR["x"] < G_BL["x"] and G_TR["y"] < G_BL["y"]:
+        # Case 2: the image needs to be rotated 90 degrees clockwise
+        image = rotate(image, -90)
+        image_was_rotated = True
+        return image_was_rotated, image, image_log
+
+    elif G_BR["x"] < G_BL["x"] and G_BR["y"] < G_TR["y"] and \
+            G_BR["x"] < G_TL["x"] and G_BR["y"] < G_TL["y"]:
+        # Case 3: the image needs to be rotated 180 degrees
+        image = rotate(image, 180)
+        image_was_rotated = True
+        return image_was_rotated, image, image_log
+
+    elif G_BL["x"] < G_TL["x"] and G_BL["y"] < G_BR["y"] and \
+            G_BL["x"] < G_TR["x"] and G_BL["y"] < G_TR["y"]:
+        # Case 4: the image needs to be rotated 90 degrees counter-clockwise
+        image = rotate(image, 90)
+        image_was_rotated = True
+        return image_was_rotated, image, image_log
+
+    else:
+        # We could not understand how to rotate the image.
+        # Let's fall back to the old code.
+        image_log.append("Fell back to old algorithm for coarse image orientation correction.")
+        pass
+
+    #
+    # This is the original implementation of this function, that could
+    # give wrong results if the image was rotated at intermediate angles.
+    # It is only run if the new algorithm above failed for some reason.
+    #
 
     # Try to find the LEFT X AXIS
     n = 0
@@ -1172,24 +1235,24 @@ def rotate_if_needed_fh(image, barcode_data, image_log, verbose=True):
 
     # Case 2: the image is rotated 180 degrees
     if left_x_axis > right_x_axis and top_y_axis > bottom_y_axis:
-            # The image needs to be rotated 180 degrees
-            image = rotate(image, 180)
-            image_was_rotated = True
-            return image_was_rotated, image, image_log
+        # The image needs to be rotated 180 degrees
+        image = rotate(image, 180)
+        image_was_rotated = True
+        return image_was_rotated, image, image_log
 
     # Case 3: the image is rotated 90 degrees clockwise
     if left_x_axis > right_x_axis and top_y_axis < bottom_y_axis:
-            # The image needs to be rotated 90 degrees counter-clockwise
-            image = rotate(image, 90)
-            image_was_rotated = True
-            return image_was_rotated, image, image_log
+        # The image needs to be rotated 90 degrees counter-clockwise
+        image = rotate(image, 90)
+        image_was_rotated = True
+        return image_was_rotated, image, image_log
 
     # Case 4: the image is rotated 90 degrees counter-clockwise (270 degrees clockwise)
     if left_x_axis < right_x_axis and top_y_axis > bottom_y_axis:
-            # The image needs to be rotated 90 degrees clockwise
-            image = rotate(image, -90)
-            image_was_rotated = True
-            return image_was_rotated, image, image_log
+        # The image needs to be rotated 90 degrees clockwise
+        image = rotate(image, -90)
+        image_was_rotated = True
+        return image_was_rotated, image, image_log
 
     # Unhandled case!
     image_log.append(
