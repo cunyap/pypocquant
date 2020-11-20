@@ -1,4 +1,5 @@
 import re
+import warnings
 from pathlib import Path
 
 from copy import deepcopy
@@ -295,6 +296,9 @@ def analyze_measurement_window(
 
         # Quality control plots
         if qc:
+            # Suppress warnings
+            warnings.filterwarnings("ignore")
+
             fig, ax = plt.subplots()
 
             # Plot profile and estimated background
@@ -318,6 +322,9 @@ def analyze_measurement_window(
             filename = str(Path(out_qc_folder) / (basename + "_peak_background_estimation.png"))
             fig.savefig(filename)
             plt.close(fig)
+
+            # Restore warnings
+            warnings.resetwarnings()
 
     # Estimate a threshold (on the noisy data) to distinguish noisy candidate peaks from likely correct ones
     peak_threshold, loc_min_indices, md, lowest_background_threshold = \
@@ -418,6 +425,8 @@ def analyze_measurement_window(
 
     # Quality control plots
     if qc:
+        # Suppress warnings
+        warnings.filterwarnings("ignore")
 
         fig, ax = plt.subplots()
 
@@ -452,6 +461,12 @@ def analyze_measurement_window(
         fig.savefig(filename)
         plt.close(fig)
 
+        # Restore warnings
+        warnings.resetwarnings()
+
+        # Suppress warnings (this seems to be necessary)
+        warnings.filterwarnings("ignore")
+
         # Draw the band on the original image
         fig, ax = plt.subplots()
         ax.imshow(window, cmap='gray')
@@ -464,6 +479,9 @@ def analyze_measurement_window(
         filename = str(Path(out_qc_folder) / (basename + "_peak_overlays.png"))
         fig.savefig(filename)
         plt.close(fig)
+
+        # Restore warnings
+        warnings.resetwarnings()
 
     return merged_results, image_log
 
