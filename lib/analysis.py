@@ -12,6 +12,7 @@ from pytesseract import pytesseract
 from scipy.ndimage import label
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.ndimage.morphology import binary_fill_holes, binary_opening
+from scipy.optimize import linear_sum_assignment
 from scipy.signal import find_peaks
 from scipy.spatial.distance import cdist
 from skimage import filters, exposure
@@ -32,19 +33,37 @@ def identify_bars_alt(peak_positions, profile_length, expected_relative_peak_pos
 
     The bars are in the sequence: IGM, IGG, CTL
     """
+
     bar_names = ["igm", "igg", "ctl"]
     bars = {}
 
-    relative_peak_positions = (np.array(peak_positions) / profile_length).reshape(-1, 1)
-    expected_relative_peak_positions = np.array(expected_relative_peak_positions).reshape(-1, 1)
-    dists = cdist(expected_relative_peak_positions, relative_peak_positions, metric='euclidean')
+    # Calculate relative (expected) peak positions
+    relative_peak_positions = (
+            np.array(peak_positions) / profile_length
+    ).reshape(-1, 1)
+    expected_relative_peak_positions = np.array(
+        expected_relative_peak_positions
+    ).reshape(-1, 1)
 
-    for i in range(len(dists)):
-        dist = dists[i]
-        if len(dist) > 0:
-            d, indx = np.min(dist), np.argmin(dist)
-            if d <= tolerance:
-                bars[bar_names[i]] = indx
+    # Calculate all distances between expected and
+    # candidate peak positions
+    dists = cdist(
+        expected_relative_peak_positions,
+        relative_peak_positions,
+        metric='euclidean'
+    )
+
+    # Calculate linear assignment
+    row, col = linear_sum_assignment(dists)
+
+    # For every row (expected relative peak position), pick
+    # the corresponding column (the candidate band closest in
+    # a *global* assignment way)
+    for r, c in zip(row, col):
+        # If the distance is larger than the tolerance, ignore it;
+        # otherwise, store it
+        if dists[r, c] <= tolerance:
+            bars[bar_names[r]] = c
 
     return bars
 
