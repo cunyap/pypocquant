@@ -30,7 +30,8 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
              perform_sensor_search, sensor_size, sensor_center,
              sensor_search_area, sensor_thresh_factor,
              sensor_border, peak_expected_relative_location,
-             subtract_background, force_fid_search, sensor_band_names,
+             control_band_index, subtract_background,
+             force_fid_search, sensor_band_names,
              verbose, qc, max_workers=4):
     res = []
     log_list = []
@@ -46,6 +47,7 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
                         sensor_thresh_factor=sensor_thresh_factor,
                         sensor_border=sensor_border,
                         peak_expected_relative_location=peak_expected_relative_location,
+                        control_band_index=control_band_index,
                         subtract_background=subtract_background,
                         force_fid_search=force_fid_search,
                         sensor_band_names=sensor_band_names,
@@ -77,6 +79,7 @@ def run_pipeline(
         sensor_thresh_factor: float = 2,
         sensor_border: tuple = (7, 7),
         peak_expected_relative_location: tuple = (0.25, 0.53, 0.79),
+        control_band_index: int = -1,
         subtract_background: bool = True,
         force_fid_search: bool = False,
         sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
@@ -157,6 +160,10 @@ def run_pipeline(
     :param peak_expected_relative_location: tuple
         Expected relative peak positions as a function of the width of the sensor (= 1.0)
 
+    :param control_band_index: int
+        Index of the control band in the peak_expected_relative_location.
+        (Optional, default -1 := right-most)
+
     :param subtract_background: bool
         If True, estimate and subtract the background of the sensor intensity profile.
 
@@ -195,8 +202,8 @@ def run_pipeline(
                                    strip_text_on_right, min_sensor_score, qr_code_border,
                                    perform_sensor_search, sensor_size, sensor_center,
                                    sensor_search_area, sensor_thresh_factor, sensor_border,
-                                   peak_expected_relative_location, subtract_background,
-                                   force_fid_search, sensor_band_names,
+                                   peak_expected_relative_location, control_band_index,
+                                   subtract_background, force_fid_search, sensor_band_names,
                                    verbose, qc, max_workers=max_workers)
 
     # Save data frame
@@ -228,6 +235,7 @@ def run_pipeline(
             "sensor_thresh_factor": sensor_thresh_factor,
             "sensor_border": sensor_border,
             "peak_expected_relative_location": peak_expected_relative_location,
+            "control_band_index": control_band_index,
             "subtract_background": subtract_background,
             "force_fid_search": force_fid_search,
             "sensor_band_names": sensor_band_names,
@@ -261,6 +269,7 @@ def run(
         sensor_thresh_factor: float = 2,
         sensor_border: tuple = (7, 7),
         peak_expected_relative_location: tuple = (0.27, 0.55, 0.79),
+        control_band_index: int = -1,
         subtract_background: bool = True,
         force_fid_search: bool = False,
         sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
@@ -291,17 +300,14 @@ def run(
         "manufacturer": "",
         "plate": "",
         "well": "",
-        sensor_band_names[2]: 0,
-        sensor_band_names[0]: 0,
-        sensor_band_names[1]: 0,
-        sensor_band_names[2] + "_abs": 0,
-        sensor_band_names[0] + "_abs": 0,
-        sensor_band_names[1] + "_abs": 0,
-        sensor_band_names[2] + "_ratio": 0,
-        sensor_band_names[0] + "_ratio": 0,
-        sensor_band_names[1] + "_ratio": 0,
         "issue": Issue.NONE.value
     }
+
+    # Also the band names
+    for sensor_band_name in sensor_band_names:
+        results_row[sensor_band_name] = 0
+        results_row[f"{sensor_band_name}_abs"] = 0.0
+        results_row[f"{sensor_band_name}_ratio"] = 0.0
 
     # Inform
     image_log.append(f"Processing {filename}")
@@ -541,7 +547,6 @@ def run(
         row_data.update(results_row)
         return row_data, image_log
 
-
     # Make a copy of the strip images for analysis
     strip_for_analysis = strip.copy()
     strip_gray_for_analysis = strip_gray.copy()
@@ -619,6 +624,7 @@ def run(
             sensor_size=sensor_size,
             sensor_search_area=sensor_search_area,
             peak_expected_relative_location=peak_expected_relative_location,
+            control_band_index=control_band_index,
             min_control_bar_width=5
         )
 
@@ -668,20 +674,25 @@ def run(
         for curr_peak_width in peak_widths:
 
             # We have a sensor image and we can proceed with the analysis
-            window_results, image_log = analyze_measurement_window(sensor,
-                                                                   border_x=sensor_border[0],
-                                                                   border_y=sensor_border[1],
-                                                                   peak_expected_relative_location=peak_expected_relative_location,
-                                                                   subtract_background=subtract_background,
-                                                                   thresh_factor=sensor_thresh_factor,
-                                                                   peak_width=curr_peak_width,
-                                                                   out_qc_folder=results_folder_path,
-                                                                   basename=filename.replace('.', '_'),
-                                                                   qc=True,
-                                                                   verbose=verbose,
-                                                                   image_log=image_log)
+            window_results, image_log = analyze_measurement_window(
+                sensor,
+                border_x=sensor_border[0],
+                border_y=sensor_border[1],
+                sensor_band_names=sensor_band_names,
+                peak_expected_relative_location=peak_expected_relative_location,
+                control_band_index=control_band_index,
+                subtract_background=subtract_background,
+                thresh_factor=sensor_thresh_factor,
+                peak_width=curr_peak_width,
+                out_qc_folder=results_folder_path,
+                basename=filename.replace('.', '_'),
+                qc=True,
+                verbose=verbose,
+                image_log=image_log
+            )
 
-            if "ctl" in window_results:
+            # Do we have a control band in the results?
+            if sensor_band_names[control_band_index] in window_results:
                 successful_peak_width = curr_peak_width
                 break
 
@@ -691,16 +702,12 @@ def run(
         # corresponding band is missing. If the control band is missing, however, we
         # add flag the issue in the result row.
 
-        #
-        # This is the mapping:
-        #
-        #    * "igm" -> sensor_band_names[0]
-        #    * "igg" -> sensor_band_names[1]
-        #    * "ctl" -> sensor_band_names[2]
-        if "ctl" in window_results:
-            results_row[sensor_band_names[2]] = 1
-            results_row[sensor_band_names[2] + "_abs"] = window_results["ctl"]["signal"]
-            results_row[sensor_band_names[2] + "_ratio"] = window_results["ctl"]["normalized_signal"]
+        # First, we check the control band
+        control_band_name = sensor_band_names[control_band_index]
+        if control_band_name in window_results:
+            results_row[control_band_name] = 1
+            results_row[f"{control_band_name}_abs"] = window_results[control_band_name]["signal"]
+            results_row[f"{control_band_name}_ratio"] = window_results[control_band_name]["normalized_signal"]
 
             # Inform
             band_type = "normal" if successful_peak_width == peak_widths[0] else "narrow"
@@ -712,15 +719,15 @@ def run(
             # Add issue to the results
             results_row["issue"] = Issue.CONTROL_BAND_MISSING.value
 
-        if "igg" in window_results:
-            results_row[sensor_band_names[1]] = 1
-            results_row[sensor_band_names[1] + "_abs"] = window_results["igg"]["signal"]
-            results_row[sensor_band_names[1] + "_ratio"] = window_results["igg"]["normalized_signal"]
+        # Now process all other bands
+        for current_sensor_band in sensor_band_names:
+            if current_sensor_band == control_band_name:
+                continue
 
-        if "igm" in window_results:
-            results_row[sensor_band_names[0]] = 1
-            results_row[sensor_band_names[0] + "_abs"] = window_results["igm"]["signal"]
-            results_row[sensor_band_names[0] + "_ratio"] = window_results["igm"]["normalized_signal"]
+            if current_sensor_band in window_results:
+                results_row[current_sensor_band] = 1
+                results_row[f"{current_sensor_band}_abs"] = window_results[current_sensor_band]["signal"]
+                results_row[f"{current_sensor_band}_ratio"] = window_results[current_sensor_band]["normalized_signal"]
 
     else:
         # Inform
