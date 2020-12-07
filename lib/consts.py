@@ -1,4 +1,5 @@
 from enum import Enum
+import matplotlib.colors as mcolors
 from pyzbar.pyzbar import ZBarSymbol
 
 
@@ -29,3 +30,19 @@ KnownManufacturers = (
     'SUREBIOTECH',
     'TAMIRNA'
 )
+
+# Standard plot colors for sensor bands
+BAND_COLORS = [
+    mcolors.TABLEAU_COLORS['tab:blue'],
+    mcolors.TABLEAU_COLORS['tab:orange'],
+    mcolors.TABLEAU_COLORS['tab:green'],
+    mcolors.TABLEAU_COLORS['tab:purple'],
+    mcolors.TABLEAU_COLORS['tab:brown'],
+    mcolors.TABLEAU_COLORS['tab:olive'],
+    mcolors.TABLEAU_COLORS['tab:cyan'],
+    mcolors.TABLEAU_COLORS['tab:red'],
+    mcolors.TABLEAU_COLORS['tab:pink'],
+    mcolors.TABLEAU_COLORS['tab:gray']
+]
+
+

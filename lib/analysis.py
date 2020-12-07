@@ -23,6 +23,7 @@ from sklearn.linear_model import HuberRegressor
 from pypocquant.lib import consts
 from pypocquant.lib.barcode import rotate
 from pypocquant.lib.processing import BGR2Gray
+from pypocquant.lib.consts import BAND_COLORS
 
 
 def get_min_dist(xy1, xy2):
@@ -343,7 +344,11 @@ def analyze_measurement_window(
             original_profile = profile.copy()
 
         # Estimate and subtract the background
-        profile, background, background_offset = fit_and_subtract_background(profile, border_x, subtract_offset=20)
+        profile, background, background_offset = fit_and_subtract_background(
+            profile,
+            border_x,
+            subtract_offset=20
+        )
 
         # Quality control plots
         if qc:
@@ -470,6 +475,10 @@ def analyze_measurement_window(
             valid_peaks.append(valid_peaks_original[indx])
             valid_lower_bounds.append(valid_lower_bounds_original[indx])
             valid_upper_bounds.append(valid_upper_bounds_original[indx])
+            merged_results[bar]['lower_bound'] = valid_lower_bounds_original[indx]
+            merged_results[bar]['upper_bound'] = valid_upper_bounds_original[indx]
+            merged_results[bar]['color'] = \
+                BAND_COLORS[sensor_band_names.index(bar) % len(BAND_COLORS)]
 
     # Get the control band name
     control_band_name = sensor_band_names[control_band_index]
@@ -509,10 +518,13 @@ def analyze_measurement_window(
             ax.plot(min, profile[min], 'g.')
 
         # Plot peaks and local bounds
-        for peak in valid_peaks:
-            ax.plot(peak, profile[peak], 'rs', markersize=4)
-        for lower_bound, upper_bound in zip(valid_lower_bounds, valid_upper_bounds):
-            ax.plot([lower_bound, upper_bound], [profile[lower_bound], profile[upper_bound]], 'o-', linewidth=2)
+        for _, result in merged_results.items():
+            ax.plot(result['peak_pos'], profile[result['peak_pos']], 'rs', markersize=4)
+            ax.plot(
+                [result['lower_bound'], result['upper_bound']],
+                [profile[result['lower_bound']], profile[result['upper_bound']]],
+                'o-', linewidth=2, color=result['color']
+            )
 
         # Plot the peak threshold
         ax.plot([0, len(profile)], [peak_threshold, peak_threshold], 'r--')
@@ -534,10 +546,11 @@ def analyze_measurement_window(
         # Draw the band on the original image
         fig, ax = plt.subplots()
         ax.imshow(window, cmap='gray')
-        for lower_bound, upper_bound in zip(valid_lower_bounds, valid_upper_bounds):
-            ax.plot([lower_bound, upper_bound, upper_bound, lower_bound, lower_bound],
+        for _, result in merged_results.items():
+            lb, ub = result['lower_bound'], result['upper_bound']
+            ax.plot([lb, ub, ub, lb, lb],
                     [border_y, border_y, window.shape[0] - border_y, window.shape[0] - border_y, border_y],
-                    '-', linewidth=2)
+                    '-', linewidth=2, color=result['color'])
 
         # Save to output folder
         filename = str(Path(out_qc_folder) / (basename + "_peak_overlays.png"))
