@@ -118,9 +118,14 @@ if __name__ == '__main__':
     # Load the settings
     settings = load_settings(settings_file)
 
-    # If the max_workers parameter is in the settings file, drop it
+    # If the 'max_workers' parameter is in the settings file, drop it
     if 'max_workers' in settings:
         del settings['max_workers']
+
+    # BACKWARD COMPATIBILITY
+    # If the 'control_band_index' parameter is *not* in the settings file, add it
+    if 'control_band_index' not in settings:
+        settings['control_band_index'] = -1
 
     # Make sure that the settings file is usable
     if DEFAULT_PARAMETERS.keys() != settings.keys():
@@ -159,6 +164,7 @@ if __name__ == '__main__':
     print(f"                          Sensor border: {settings['sensor_border']}")
     print(f"                      Sensor band names: {settings['sensor_band_names']}")
     print(f"       Expected peak relative positions: {settings['peak_expected_relative_location']}")
+    print(f"                     Control band index: {settings['control_band_index']}")
     print(f"             Subtract signal background: {settings['subtract_background']}")
     print(f"                       Force FID search: {settings['force_fid_search']}")
     print(f"                         Verbose output: {settings['verbose']}")
@@ -172,3 +178,6 @@ if __name__ == '__main__':
         **settings,
         max_workers=max_workers
     )
+
+    # Properly shut everything down
+    sys.exit(0)

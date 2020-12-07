@@ -3,6 +3,8 @@ import warnings
 from pathlib import Path
 
 from copy import deepcopy
+from typing import Tuple, Union
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,13 +30,38 @@ def get_min_dist(xy1, xy2):
     return np.min(dists), np.argmin(dists)
 
 
-def identify_bars_alt(peak_positions, profile_length, expected_relative_peak_positions, tolerance=0.1):
+def identify_bars_alt(
+        peak_positions: list,
+        profile_length: int,
+        sensor_band_names: Tuple[str, ...],
+        expected_relative_peak_positions: Tuple[float, ...],
+        control_band_index: int,
+        tolerance: float = 0.1
+):
     """Assign the peaks to the corresponding bar based on the known relative position in the sensor.
 
-    The bars are in the sequence: IGM, IGG, CTL
+    :param peak_positions: list
+        List of absolute peak positions in pixels.
+
+    :param profile_length:
+        Length of the profile in pixels.
+
+    :param sensor_band_names: Tuple[str, ...]
+        Tuple of sensor band names.
+
+    :param expected_relative_peak_positions: Tuple[float, ...}
+        Tuple of expected relative (0.0 -> 1.0) peak positions.
+
+    :param control_band_index:
+        Index of the control band in tuple of sensor band names and expected relative positions.
+
+    :param tolerance:
+        Distance tolerance between pean position and expected position for assignment.
+
+    :return dictionary of band assignments: {bar_name: index}
     """
 
-    bar_names = ["igm", "igg", "ctl"]
+    # Instantiate results dictionary
     bars = {}
 
     # Calculate relative (expected) peak positions
@@ -63,7 +90,7 @@ def identify_bars_alt(peak_positions, profile_length, expected_relative_peak_pos
         # If the distance is larger than the tolerance, ignore it;
         # otherwise, store it
         if dists[r, c] <= tolerance:
-            bars[bar_names[r]] = c
+            bars[sensor_band_names[r]] = c
 
     return bars
 
@@ -248,7 +275,10 @@ def fit_and_subtract_background(profile, border, subtract_offset=10):
     return profile, background, background_offset
 
 
-def estimate_threshold_for_significant_peaks(profile, border_x, thresh_factor):
+def estimate_threshold_for_significant_peaks(
+        profile: np.ndarray,
+        border_x: int,
+        thresh_factor: float):
     # First find all local minima (add back the border offset)
     loc_min_indices = border_x + local_minima(profile[border_x: len(profile) - border_x])
 
@@ -276,18 +306,20 @@ def estimate_threshold_for_significant_peaks(profile, border_x, thresh_factor):
 
 
 def analyze_measurement_window(
-        window,
-        border_x=10,
-        border_y=5,
-        thresh_factor=3,
-        peak_width=7,
-        peak_expected_relative_location=(0.27, 0.55, 0.79),
-        subtract_background=False,
-        qc=False,
-        verbose=False,
-        out_qc_folder='',
-        basename='',
-        image_log=[]):
+        window: np.ndarray,
+        border_x: int = 10,
+        border_y: int = 5,
+        thresh_factor: float = 3.0,
+        peak_width: int = 7,
+        sensor_band_names: Tuple[str, ...] = ('igm', 'igg', 'ctl'),
+        peak_expected_relative_location: Tuple[float, ...] = (0.27, 0.55, 0.79),
+        control_band_index: int = -1,
+        subtract_background: bool = False,
+        qc: bool = False,
+        verbose: bool = False,
+        out_qc_folder: Union[str, Path] = '',
+        basename: str = '',
+        image_log: list = []):
     """Quantify the band signal across the sensor.
 
     Notice: the expected relative peak positions for the original strips were: [0.30, 0.52, 0.74]
@@ -371,7 +403,9 @@ def analyze_measurement_window(
             continue
 
         # Find the peak bounds
-        lower_bound, upper_bound, image_log = find_peak_bounds(profile, border_x, c_peak, image_log, verbose)
+        lower_bound, upper_bound, image_log = find_peak_bounds(
+            profile, border_x, c_peak, image_log, verbose
+        )
 
         # Store the information
         valid_peaks.append(c_peak)
@@ -401,7 +435,13 @@ def analyze_measurement_window(
         band_signals.append(tot_intensity)
 
     # Now assign the peaks to the physical band location
-    bars = identify_bars_alt(valid_peaks, len(profile), peak_expected_relative_location)
+    bars = identify_bars_alt(
+        valid_peaks,
+        len(profile),
+        sensor_band_names,
+        peak_expected_relative_location,
+        control_band_index
+    )
 
     # Merge quantification and bars dictionary
     merged_results = {}
@@ -431,16 +471,21 @@ def analyze_measurement_window(
             valid_lower_bounds.append(valid_lower_bounds_original[indx])
             valid_upper_bounds.append(valid_upper_bounds_original[indx])
 
+    # Get the control band name
+    control_band_name = sensor_band_names[control_band_index]
+
     # Now normalize the signals against the control
-    if "ctl" in merged_results:
-        ctl_signal = merged_results["ctl"]["signal"]
-        merged_results["ctl"]["normalized_signal"] = 1.0
+    if control_band_name in merged_results:
+        ctl_signal = merged_results[control_band_name]["signal"]
+        merged_results[control_band_name]["normalized_signal"] = 1.0
 
-        if "igg" in merged_results:
-            merged_results["igg"]["normalized_signal"] = merged_results["igg"]["signal"] / ctl_signal
-
-        if "igm" in merged_results:
-            merged_results["igm"]["normalized_signal"] = merged_results["igm"]["signal"] / ctl_signal
+        # Now process all other bands
+        for current_band_name in sensor_band_names:
+            if current_band_name == control_band_name:
+                continue
+            if current_band_name in merged_results:
+                merged_results[current_band_name]["normalized_signal"] = \
+                    merged_results[current_band_name]["signal"] / ctl_signal
 
     # Quality control plots
     if qc:
@@ -520,9 +565,39 @@ def get_sensor_contour_fh(
         sensor_size,
         sensor_search_area,
         peak_expected_relative_location,
+        control_band_index=-1,
         min_control_bar_width=7
 ):
-    """Extract the sensor area from the gray strip image."""
+    """Extract the sensor area from the gray strip image.
+
+    :param strip_gray: np.ndarray
+        Gray-value image of the extracted strip.
+
+    :param sensor_center: Tuple[int, int]
+        Coordinates of the center of the sensor (x, y).
+
+    :param sensor_size: Tuple[int, int]
+        Size of the sensor (width, height).
+
+    :param sensor_search_area: Tuple[int, int]
+        Size of the sensor search area (width, height).
+
+    :param peak_expected_relative_location: list[float, ...]
+        List of expected relative peak (band) positions in the sensor (0.0 -> 1.0).
+
+    :param control_band_index: int
+        Index of the control band in the peak_expected_relative_location.
+        (Optional, default -1 := right-most)
+
+    :param min_control_bar_width: int
+        Minimum width of the control bar (in pixels).
+        (Optional, default 7)
+
+    :return Tuple:
+        Realigned sensor: np.ndarray
+        Sensor coordinates: [y0, y, x0, x]
+        sensor_score: score for the sensor extracted (obsolete: fixed at 1.0)
+    """
 
     # Input argument sanitation
     if sensor_search_area[0] < sensor_size[0] or sensor_search_area[1] < sensor_size[1]:
@@ -571,7 +646,7 @@ def get_sensor_contour_fh(
     if len(candidate_locations) > 0:
         indx = np.argmin(
             cdist(
-                np.array(peak_expected_relative_location[2]).reshape(-1, 1),
+                np.array(peak_expected_relative_location[control_band_index]).reshape(-1, 1),
                 np.array(candidate_relative_locations).reshape(-1, 1),
             )
         )
@@ -595,7 +670,7 @@ def get_sensor_contour_fh(
     # Now use the expected peak location to re-center the sensor in x
     corrected_pos = accepted_loc - (sensor_search_area[1] - sensor_size[1]) // 2
     curr_rel_pos_on_sensor_width = float(corrected_pos) / sensor_size[1]
-    expected_rel_pos = peak_expected_relative_location[2]
+    expected_rel_pos = peak_expected_relative_location[control_band_index]
 
     # Calculate the correction factor in x
     sensor_center_dx = int((expected_rel_pos - curr_rel_pos_on_sensor_width) * sensor_size[1])

@@ -19,6 +19,7 @@ def default_settings():
         "sensor_thresh_factor": 2,
         "sensor_search_area": (71, 259),
         "peak_expected_relative_location": (0.25, 0.53, 0.79),
+        "control_band_index": -1,
         "force_fid_search": False,
         "sensor_band_names": ('igm', 'igg', 'ctl'),
         "verbose": True,
