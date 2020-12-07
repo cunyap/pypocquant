@@ -650,7 +650,6 @@ def run(
         row_data.update(results_row)
         return row_data, image_log
 
-
     # Add the sensor score to the results
     # results_row["sensor_score"] = sensor_score
 

@@ -36,7 +36,6 @@ def identify_bars_alt(
         profile_length: int,
         sensor_band_names: Tuple[str, ...],
         expected_relative_peak_positions: Tuple[float, ...],
-        control_band_index: int,
         tolerance: float = 0.1
 ):
     """Assign the peaks to the corresponding bar based on the known relative position in the sensor.
@@ -52,9 +51,6 @@ def identify_bars_alt(
 
     :param expected_relative_peak_positions: Tuple[float, ...}
         Tuple of expected relative (0.0 -> 1.0) peak positions.
-
-    :param control_band_index:
-        Index of the control band in tuple of sensor band names and expected relative positions.
 
     :param tolerance:
         Distance tolerance between pean position and expected position for assignment.
@@ -444,8 +440,7 @@ def analyze_measurement_window(
         valid_peaks,
         len(profile),
         sensor_band_names,
-        peak_expected_relative_location,
-        control_band_index
+        peak_expected_relative_location
     )
 
     # Merge quantification and bars dictionary
