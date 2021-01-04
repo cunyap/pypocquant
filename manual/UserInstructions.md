@@ -144,7 +144,7 @@ How to estimate sensor parameters graphically in the UI:
 
 | Drawing sensor by clicking into the corners | Drawing finished with aligned bars      |
 | ------------------------------------------- | ----------------------------------------- |
-| <img src="ui_images/ui_drawing_arrow.jpg"/> | <img src="ui_images/ui_bar_aligned.JPG"/> |
+| <img src="ui_images/ui_drawing_arrow.JPG"/> | <img src="ui_images/ui_bar_aligned.JPG"/> |
 
   
 
