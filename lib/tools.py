@@ -1,3 +1,15 @@
+#  ********************************************************************************
+#   Copyright © 2020-2021, ETH Zurich, D-BSSE, Andreas P. Cuny & Aaron Ponti
+#   All rights reserved. This program and the accompanying materials
+#   are made available under the terms of the GNU Public License v3.0
+#   which accompanies this distribution, and is available at
+#   http://www.gnu.org/licenses/gpl
+#
+#   Contributors:
+#     * Andreas P. Cuny - initial API and implementation
+#     * Aaron Ponti - initial API and implementation
+#  *******************************************************************************
+
 from pypocquant.lib.analysis import extract_rotated_strip_from_box, use_hough_transform_to_rotate_strip_if_needed, \
     use_ocr_to_rotate_strip_if_needed
 from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh, rotate_if_needed_fh, \
