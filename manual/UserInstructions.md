@@ -6,9 +6,11 @@ The tool __pyPOCQuant__ aims to automatically detect and quantify signal bands f
 
 An analysis pipeline can be run either from the command line (good for automating large numbers of analysis) or from a desktop application.
 
-> At current stage, almost all operations are supported from the user interface, with the exception of the optional [Split images by strip manufacturer](#Split-images-by-POCT-manufacturer) step.
+
 
 <img src="ui_images/ui_full_empty.JPG"/>
+
+
 
 ## Command line workflow <a name="command_line_workflow"></a>
 
@@ -114,9 +116,14 @@ $ python pyPOCQuant_FH.py -f /PATH/TO/INPUT/FOLDER/MANUFACTURER -o /PATH/TO/RESU
 ```
 
 * `/PATH/TO/INPUT/FOLDER/MANUFACTURER`: path to the folder that contains all images for a given camera and manufacturer.
+
 * `/PATH/TO/RESULTS/FOLDER`: path where the results (and the quality control images) for a given camera and manufacturer will be saved. The results are saved in a `quantification_data.csv` text file.
+
 * `/PATH/TO/CONFIG/FILE`: path to the configuration file to be used for this analysis. Please see below. Notice that a configuration file will be needed per manufacturer and (possibly) camera combination.
+
 * `NUM_WORKERS`: number of  parallel processes; e.g. `8`.
+
+  
 
 ## GUI workflow <a name="gui_workflow"></a>
 
@@ -130,7 +137,7 @@ $ python pyPOCQuant_FH.py -f /PATH/TO/INPUT/FOLDER/MANUFACTURER -o /PATH/TO/RESU
 
 > This only applies if you collected many images using POCTs from different vendors and stored all the images in one common folder! Analysis settings would need to be slightly adapted for different POCTs shapes and sizes.
 
-Please notice that this step has not been integrated into the user interface yet, and must be [run from the command line](#Split-images-by-POCT-manufacturer).
+To do so go to `File` --> `Split images by type` to open the dialog to split the images.
 
 #### How to determine the parameters automatically using the GUI <a name="settingsprepa"></a>
 
@@ -160,6 +167,8 @@ How to estimate sensor parameters graphically in the UI:
 Once the previous steps are done and all parameters are correctly set, you can hit the `Run` button to start the analysis.
 
 _Note: a step by step guide can be found under **Quick start** (`Help -> Quick start`)_
+
+
 
 ## Settings
 
@@ -214,9 +223,14 @@ force_fid_search=True
 
 <img src="ui_images/basic_params.JPG"/>
 
-#### sensor_band_names
+##### number_of_sensor_bands
 
-* Custom name for the three bands `t2`, `t1` and `ctl` (e.g., `IgM`, `IgG` and `Ctl`).
+* Defines the number of test lines (TLs) including the control line. Allows to quantify POCTs with various amounts of TLs. 
+* Possible values: `2` to `100`
+
+##### sensor_band_names
+
+* Custom name for the test lines (by default 3, needs to match the number of defined TLs `number_of_sensor_bands`) `t2`, `t1` and `ctl` (e.g., `IgM`, `IgG` and `Ctl`).
 
 ##### peak_expected_relative_location
 
@@ -366,6 +380,8 @@ Structure and description of the result table:
 `user`: custom field
 
 > Note: expect small residual variations in the absolute signal strengths (`ctl_abs`, `t2_abs`, and `t1_abs`) across images in a batch due to inhomogeneities  in acquisition.
+
+> Note2: The number of test lines (TL) changes according to the number set to the parameter `Number of sensor bands`. By default 3 TLs are defined including the `ctl` line. Changing the amount of TLs also changes the amount of columns in the results table.
 
 #### Analysis issues<a name="analysisissues"></a>
 
