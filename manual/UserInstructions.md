@@ -225,8 +225,14 @@ force_fid_search=True
 
 ##### number_of_sensor_bands
 
-* Defines the number of test lines (TLs) including the control line. Allows to quantify POCTs with various amounts of TLs. 
+* Allows to quantify POCTs with various amounts of TLs. Defines the number of test lines (TLs) including the control line in the UI. This parameter is not part of the settings file as the pipeline counts the the number of TLs from the `sensor_band_names` and `peak_expected_relative_location` passed.
 * Possible values: `2` to `100`
+
+
+##### control_band_index
+* Index of `ctl` TL
+* Possible values: `int`, Python lists are 0 indexed.
+* Default: `-1` (last index if the default 3 TLs have been chosen)
 
 ##### sensor_band_names
 
