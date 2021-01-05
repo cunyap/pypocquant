@@ -137,9 +137,9 @@ Step 6:
 
 * Adjust the expected position of the bands by clicking on the vertical violet lines and move them in place such that they are centered and overlapping with the bands on the test. Optionally, you can also fine-adjust by changing the parameters in the tree.
 
-| Not properly aligned control band line (vertical violet line). `peak_expected_relative_location`=(0.22, 0.5, 0.7) | Properly aligned band lines `peak_expected_relative_location`=(0.22, 0.5, 0.77) |
+| Not properly aligned control band line (vertical violet line). `peak_expected_relative_location`=(0.23, 0.5, 0.7) | Properly aligned band lines `peak_expected_relative_location`=(0.23, 0.5, 0.77) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-|  <img src="ui_images/ui_moving_bar.JPG"/>           | !<img src="ui_images/ui_bar_aligned.JPG"/>       |
+| <img src="ui_images/ui_moving_bar.JPG"/>                     | !<img src="ui_images/ui_bar_aligned.JPG"/>                   |
 
 Step 7 
 
