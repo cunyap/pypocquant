@@ -14,9 +14,7 @@ This _quick start_ guide focuses on the most relevant points. For detailed infor
 
 * POCT Template / mount.
 
-* A tripod to mount the camera above the POCT template and mount. Alternatively, a 
-
-    box (plastic box, or even a shoe box) can be used to mount the camera at a defined distance above the POCT template.
+* A tripod to mount the camera above the POCT template and mount. Alternatively, a box (plastic box, or even a shoe box) can be used to mount the camera at a defined distance above the POCT template.
 
 * Tape, glue, scissors or scalpel to fix and build the mounts.
 
@@ -44,7 +42,7 @@ The basis of the template mount could also be 3D printed or laser cut from any m
 
 While setting up the imaging acquisition station there are three important points to consider. 
 
- * First, make sure that you have __constant lightning conditions__. If just using the POCT template and a tripod (Fig. 3) make sure you have a dark room otherwise daylight changes will influence the images. Best would be using a photo box (Fig.4). _Note: Our POCT template changed over the course of the development but we don't have images of the setup from each stage. Here you see a very early incomplete version of it. Please us the one presented in Fig. 1_
+ * First, make sure that you have __constant lightning conditions__. If just using the POCT template and a tripod (Fig. 3) make sure you have a dark room otherwise daylight changes will influence the images. Best would be using a photo box (Fig.4). _Note: Our POCT template changed over the course of the development but we don't have images of the setup from each stage. Here you see a very early incomplete version of it. Please us the one presented in Fig. 1_.
 
  * Second, make sure that during a series of tests of the same kind __the camera is well fixed on the tripod__. Ideally you use the camera timer option or a remote control to release the images to make sure that the distance between the camera and the POCT on the POCT template is constant.
 
@@ -91,7 +89,7 @@ Step 4:
 
 
 * Follow the installer guide lines to install __pyPOCQuant__
-* Install tesseract for your operating system by following these steps: https://tesseract-ocr.github.io/tessdoc/Home.html
+* Install tesseract for your operating system by following these steps: https://tesseract-ocr.github.io/tessdoc/Home.html. Note: in Linux you need also `libzbar`. In Ubuntu, you can install both with `sudo apt install libzbar0 tesseract-ocr`.
 
 <img src="ui_images/ui_full_empty.JPG"/>
 
@@ -101,7 +99,7 @@ Note: For most images it is sufficient to just load an image (Step 3 & 4) and dr
 
 Step 1: 
 
-* Copy the images of the same kind (i.e., same POCT cartridge / manufacturer and/or same imaging station, objective, distance to the sample) into a folder. _Note we have a script that allows you to automatically split the images by manufacturer into subfolders (if  included in the QR code labels). For the details read the respective section in the user manual (`Help -> User manual`)._
+* Copy the images of the same kind (i.e., same POCT cartridge / manufacturer and/or same imaging station, objective, distance to the sample) into a folder. _Note that the UI allows you to automatically split the images by manufacturer into subfolders (if  included in the QR code labels); in addition, we provide a script to do so from the command line. For the details read the respective sections in the user manual (`Help -> User manual`)._
 
 Step 2:
 
@@ -115,7 +113,7 @@ Step 3:
 
 Step 4:
 
-* Click on one image (ideally one which shows all 3 bands) to load it. After a while (green progress bar fully to the right) the POCT area will be extracted and displayed on the top-right canvas.
+* Click on one image (ideally one which shows all bands) to load it. After a while (green progress bar fully to the right) the POCT area will be extracted and displayed on the top-right canvas.
 
 | Image selected - strip extraction pending | Image selected - strip extraction done and displayed |
 | ----------------------------------------- | -------------------------------------------------- |
@@ -163,7 +161,7 @@ Step 9:
 
   
 
-Repeat the procedure for all other folders. _Note: if the POCT cartridge design changes or a different camera with a different perspective is used, a new configuration file has to be generated and tested. Otherwise, one can load the same config file also for other / new images. To load a config file just double-click on it if it is in the same folder as the input images, or hit `Ctrl+O` or select`File -> Load settings from file`_
+Repeat the procedure for all other folders. _Note: if the POCT cartridge design changes or a different camera with a different perspective is used, a new configuration file has to be generated and tested. Otherwise, one can load the same configuration file also for other / new images. To load a configuration file just double-click on it if it is in the same folder as the input images, or hit `Ctrl+O` or select `File -> Load settings from file`_
 
 
 
@@ -185,7 +183,7 @@ __Solution__: Increase the `sensor threshold factor` (Fig. 6)
 
 __Problem__: _One or more bands were missed_ or _the wrong band(s) were extracted_ (Fig. 7)
 
-__Solution__: Adjust the `Peak expected relative location` parameter for the band(s) which were not detected. If that did not solve the problem check the qc images if the sensor was detected correctly. If not adjust the sensor position and its size (Fig. 8).
+__Solution__: Adjust the `Peak expected relative location` parameter for the band(s) which were not detected. If that did not solve the problem check the quality-control images if the sensor was detected correctly. If not adjust the sensor position and its size (Fig. 8).
 
 | Fig 7                                                        | Fig 8                                                        |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -212,11 +210,11 @@ __Solution__: Select the checkbox `try to correct strip orientation`. This will 
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="problem_solutions/IMG_9524_JPG_strip_gray_hough_analysis_candidates.png"/>  | <img src="problem_solutions/IMG_9524_JPG_strip_gray_hough_analysis.png"/>  |
 
-__Problem__: I have a lot of images from with different POCT cartridge designs from different manufacturers taken with the same camera but my config file does only work for one type.
+__Problem__: I have a lot of images from with different POCT cartridge designs from different manufacturers taken with the same camera but my configuration file does only work for one type.
 
 __Solution__: Split the images into a subfolder for each cartridge design / manufacturer. If you used the QR code sample labels you can use the script described in the manual to do this automatically for you. 
 
-__Problem__:  I have a lot of images with different POCT cartridge designs from different manufacturers. Do I really need a separate config for each design?
+__Problem__:  I have a lot of images with different POCT cartridge designs from different manufacturers. Do I really need a separate configuration for each design?
 
 __Solution__: Unfortunately yes. As they come in any shape the software needs some specific guidance to know where to search for the bands and to allow for robust and reproducible results. One solution to relax this assumption would be to change the POCT cartridge design by including small qr codes directly next to the sensor. That would allow us also to get rid of the QR code template. If you have a direct contact to your favorite manufacturer, tell them about it and their potential competitive advantage in the market (Fig 13)! 
 

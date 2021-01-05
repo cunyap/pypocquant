@@ -16,7 +16,7 @@ An analysis pipeline can be run either from the command line (good for automatin
 
 1. Split images by POCT manufacturer if needed
 2. Copy all the images of the same kind into one folder
-3. Prepare a settings file
+3. Prepare a settings (configuration) file
 4. Run the pipeline
 
 ### Split images by POCT manufacturer
@@ -25,7 +25,7 @@ An analysis pipeline can be run either from the command line (good for automatin
 
 If you have many images in an unorganized way we provide a helper script to sort them by manufacturer into subfolders.
 
-> This is currently not integrated into the user interface and needs to be run from console.
+> This can also be run from the UI, see below.
 
 ```bash
 $ python ./split_images_by_strip_type_parallel.py -f /PATH/TO/INPUT/FOLDER -o /PATH/TO/OUTPUT/FOLDER -w ${NUM_WORKERS}
@@ -60,7 +60,6 @@ $ python ./pypocquant/pyPOCQuant_FH.py -c /PATH/TO/INPUT/settings_file.conf
 Open the file in a text editor and edit it.
 
 ```bash
-max_workers=2
 qc=True
 verbose=True
 sensor_band_names=('igm', 'igg', 'ctl')
@@ -145,7 +144,7 @@ A settings file must not necessarily be created in advance. The Parameter Tree c
 
 How to estimate sensor parameters graphically in the UI:
 
-* `Select the input folder` and click on one of the listed images to display it. The POCT region will be automatically extracted and shown in the view at the top. The lower view shows the whole image.
+* `Select the input folder` and click on one of the listed images to display it. The POCT region will be automatically extracted and shown in the view at the top. Please mind that this can take a few seconds. The lower view shows the whole image.
 
 * Hit the `Draw sensor outline` icon (red arrow) in the toolbar. This will allow you to interactively define the `sensor area` and the `peak_expected_relative_location` parameters.
 
@@ -175,7 +174,6 @@ _Note: a step by step guide can be found under **Quick start** (`Help -> Quick s
 The following settings must be specified. These are default values and need to be adopted for a series of the same kind of images. Please note: in the following, `strip` is used to indicate the POCT, and `sensor` to indicate the measurement region within the `strip`.
 
 ```bash
-max_workers=2
 qc=True
 verbose=True
 sensor_band_names=('igm', 'igg', 'ctl')
@@ -225,14 +223,14 @@ force_fid_search=True
 
 ##### number_of_sensor_bands
 
-* Allows to quantify POCTs with various amounts of TLs. Defines the number of test lines (TLs) including the control line in the UI. This parameter is not part of the settings file as the pipeline counts the the number of TLs from the `sensor_band_names` and `peak_expected_relative_location` passed.
+* It defines the number of test lines (TLs) to be expected in the POCT, including the control line. This parameter is used by the user interface to dynamically adapt the tree for related settings (see `sensor_band_names` and `peak_expected_relative_location` below), and is not part of the settings file, since it can be easily derived fro those parameters.
 * Possible values: `2` to `100`
 
 
 ##### control_band_index
-* Index of `ctl` TL
-* Possible values: `int`, Python lists are 0 indexed.
-* Default: `-1` (last index if the default 3 TLs have been chosen)
+* Index of the control line.
+* Possible values: `0`, `1`, `...`, `number_of_sensor_bands - 1`; or `-1` (last index).
+* Default: `-1` (in Python parlance, `-1` means last index, or, the first index from the right).
 
 ##### sensor_band_names
 
@@ -387,7 +385,9 @@ Structure and description of the result table:
 
 > Note: expect small residual variations in the absolute signal strengths (`ctl_abs`, `t2_abs`, and `t1_abs`) across images in a batch due to inhomogeneities  in acquisition.
 
-> Note2: The number of test lines (TL) changes according to the number set to the parameter `Number of sensor bands`. By default 3 TLs are defined including the `ctl` line. Changing the amount of TLs also changes the amount of columns in the results table.
+> None 2: `ctl`, `t1`, and `t2` in the column names will be replaced by the names defines in `sensor_band_names`. For examples, `t1_ratio` may  become `igg_ratio`.
+
+> Note 3: The number of test lines (TL) changes according to the parameter `number_of_sensor_bands`. By default, 3 TLs are defined including the `ctl` line. Changing the number of TLs also changes the number of columns in the results table.
 
 #### Analysis issues<a name="analysisissues"></a>
 
@@ -434,12 +434,12 @@ Raw image shown as comparison:
   <img src="demo_image/IMG_8489_JPG_strip_gray_aligned_after_ocr3.png" style="zoom:30%;"/>
 
 
-* `IMAGE_FILE_NAME_strip_gray_hough_analysis.png` Aligned POCT cropped around its outline such that it is parallel to the bottom side detecting the pipetting spot to identify wrongly oriented POCT in the strip box. 
+* `IMAGE_FILE_NAME_strip_gray_hough_analysis` Aligned POCT cropped around its outline such that it is parallel to the bottom side detecting the pipetting spot to identify wrongly oriented POCT in the strip box. 
 
   <img src="demo_image/IMG_8489_JPG_strip_gray_hough_analysis.png" style="zoom:30%;" />
 
 
-* `IMAGE_FILE_NAME_strip_gray_hough_analysis_candidates.png` Hough analysis candidate results. The rectangles indicate the search areas while as the circles indicate potential hits for the pipetting spot. Red rectangle and magenta circles identifies the side where the pipetting spot was detected. Note it is assumed that the control band is always opposite of the pipetting area.
+* `IMAGE_FILE_NAME_strip_gray_hough_analysis_candidates` Hough analysis candidate results. The rectangles indicate the search areas while as the circles indicate potential hits for the pipetting spot. Red rectangle and magenta circles identifies the side where the pipetting spot was detected. Note it is assumed that the control band is always opposite of the pipetting area.
 
   <img src="demo_image/IMG_8489_JPG_strip_gray_hough_analysis_candidates.png" style="zoom:30%;" />
 
@@ -465,9 +465,9 @@ Raw image shown as comparison:
 
 ### Log file <a name="resultlog"></a>
 
-The log file contains more detailed information for each processed image identified by its file name such as `Img0052.jpg`. 
+The log file contains more detailed information for each processed image identified by its file name, such as `IMG_8489.JPG`. 
 
-It informs about the barcode extraction and its rotation, the QR code box rotation, the FID extraction, the actual sensor coordinates and the identified bands.
+It informs about barcode extraction and its rotation, QR code box rotation, FID extraction, actual sensor coordinates and the identified bands.
 
 Example log:
 
@@ -488,7 +488,7 @@ File IMG_8489.JPG: the bands were 'normal'.
 
 ### Settings file <a name="resultsettings"></a>
 
- A settings file is created in the `-o /PATH/TO/RESULTS/FOLDER` with the actually used parameters for the analysis. It can be used to reproduce the obtained results.
+A settings file is created in the `-o /PATH/TO/RESULTS/FOLDER` with the actually used parameters for the analysis. It can be used to reproduce the obtained results.
 
 See [settings file section](#Settings) for detailed description.
 
