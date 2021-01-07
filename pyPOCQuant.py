@@ -28,7 +28,11 @@ if __name__ == '__main__':
     #
     # Parsing input arguments
     #
-    parser = argparse.ArgumentParser(description='Automated analysis tool to batch detect and quantify point of care test strips.')
+    parser = argparse.ArgumentParser(description='Automated analysis tool to batch detect and quantify test line '
+                                                 'signals of point of care test strips.')
+    """ Input argument parser for pyPOCQuant automated analysis tool to batch detect and quantify test line signals of 
+    point of care test strips.This is the command line interface. Type --help or read the manual for 
+    help with the usage."""
 
     # Version
     parser.add_argument(
@@ -51,7 +55,8 @@ if __name__ == '__main__':
         '-o',
         '--output_folder',
         default='',
-        help="output folder where all results are written (if omitted, it defaults to a 'pipeline' subfolder in the input folder)."
+        help="output folder where all results are written (if omitted, it defaults to a 'pipeline' subfolder in the"
+             " input folder)."
     )
 
     # Create settings file

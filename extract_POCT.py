@@ -32,6 +32,8 @@ if __name__ == '__main__':
     # Parsing input arguments
     #
     parser = argparse.ArgumentParser(description='Extract POCT from selected image to help defining analysis paremeters.')
+    """ Input argument parser for extracting POCT from a selected image.
+    """
 
     # Version
     parser.add_argument(

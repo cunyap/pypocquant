@@ -29,6 +29,23 @@ from pypocquant.lib.io import load_and_process_image
 
 
 def run_pool(files, input_folder_path, max_workers=4):
+    """ Thread pool for batch processing the QR code metadata extraction.py
+
+    :param files:
+        Name of the image file
+    :type files: list
+
+    :param input_folder_path:
+        Path to results input folder.
+    :type input_folder_path: str
+
+    :param max_workers:
+        Max number of workers to use in parallel.
+    :type max_workers: int
+
+    :returns: void: Results writted to a .csv file directly in `input_folder_path`.
+
+     """
     res = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         run_n = partial(run, input_folder_path=input_folder_path)
@@ -44,6 +61,19 @@ def run_pool(files, input_folder_path, max_workers=4):
 
 
 def run(filename, input_folder_path):
+    """ Runnable for QR code metadata extraction.
+
+    :param filename:
+        Name of the image file
+    :type filename: str
+
+    :param input_folder_path:
+        Path to results input folder.
+    :type input_folder_path: str
+
+    :returns: results_row
+    :rtype: dict
+    """
 
     # Initialize results to to add to the dataframe
     results_row = {
@@ -121,6 +151,8 @@ if __name__ == '__main__':
     # Parsing input arguments
     #
     parser = argparse.ArgumentParser(description='Extract patient data from images.')
+    """ Input argument parser for extracting patient data from images. This is the command line interface for metadata
+    extraction such as FID."""
 
     # Input folder
     parser.add_argument(

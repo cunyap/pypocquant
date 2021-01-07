@@ -21,7 +21,8 @@ def phase_only_correlation(in1: np.ndarray, in2: np.ndarray) -> np.ndarray:
 
     :param in1: 2D numpy array.
     :param in2: 2D numpy array.
-    :return: 2D np.float64 numpy array.
+
+    :returns: 2D np.float64 numpy array.
     """
 
     # Make sure the inputs are in np.float64 precision
@@ -62,7 +63,9 @@ def find_position_in_image_using_phase_corr(in1: np.ndarray, in2: np.ndarray) ->
 
     :param in1: 2D numpy array (must be strictly smaller, i.e. completely contained) in in2.
     :param in2: 2D numpy array.
-    :return: tuple with (y = row, x = column) location of the center of in1 in in2.
+
+    :returns: tuple with (y = row, x = column) location of the center of in1 in in2.
+    :rtype: tuple
     """
 
     # Get and check image dimensions
@@ -94,7 +97,9 @@ def find_position_in_image_using_norm_xcorr(in1: np.ndarray, in2: np.ndarray) ->
 
     :param in1: 2D numpy array (must be strictly smaller, i.e. completely contained) in in2.
     :param in2: 2D numpy array.
-    :return: tuple with (y = row, x = column) location of the center of in1 in in2.
+
+    :returns: tuple with (y = row, x = column) location of the center of in1 in in2.
+    :rtype: tuple
     """
 
     # Get and check image dimensions
@@ -117,7 +122,12 @@ def find_position_in_image_using_norm_xcorr(in1: np.ndarray, in2: np.ndarray) ->
 
 
 def correlation_coefficient(image_1, image_2):
-    """Create the normalized correlation coefficient (scalar) of two images."""
+    """Create the normalized correlation coefficient (scalar) of two images.
+    :param image_1: np image1
+    :param image_2: np image2
+
+    :returns: product:
+    """
     if image_1.shape[0] != image_2.shape[0] or image_1.shape[1] != image_2.shape[1]:
         raise Exception(
             "`image_1` and `image_2` must have  the same dimensions!")
@@ -135,6 +145,18 @@ def crop_image_around_position_to_size(image, y, x, size):
     """Crop an image to given size centered at coordinates (y, x).
 
     If the original image is too small, a cropped version will be returned.
+
+    :param image:
+        Image to be cropped
+    :param y:
+        y center coordinate
+    :param x:
+        x center coordinate
+    :param size:
+        size of the crop
+
+    :returns: out:
+        Cropped image
     """
 
     half_size_y = size[0] // 2
@@ -171,7 +193,17 @@ def crop_image_around_position_to_size(image, y, x, size):
 
 
 def create_rgb_image(red, green, blue=None):
-    """Merge three single channels into an RGB image."""
+    """Merge three single channels into an RGB image.
+
+    :param red:
+        Red channel
+    :param green
+        Green channel
+    :param blue
+        Blue channel
+
+    :returns: view: RGB image
+    """
 
     if blue is None:
         blue = np.zeros(red.shape, dtype=red.dtype)
@@ -181,7 +213,17 @@ def create_rgb_image(red, green, blue=None):
 
 
 def find_features(image, detector="surf", num_features=1000, hessian_threshold=10, use_latch_descriptor=False):
-    """Find features in of a template inside a larger image."""
+    """Find features in of a template inside a larger image.
+
+    :param image:
+    :param detector:
+    :param num_features:
+    :param hessian_threshold:
+    :param use_latch_descriptor:
+
+    :returns: kp
+    :returns: des
+    """
 
      # Initialize feature detector
     if detector == "surf":
@@ -217,8 +259,21 @@ def find_features(image, detector="surf", num_features=1000, hessian_threshold=1
 
     return kp, des
 
-def find_position_of_template_in_image_using_descriptors(template_kps, template_des, image_kps, image_des, template_size):
-    """Find the template in the image using the extracted feature descriptors."""
+
+def find_position_of_template_in_image_using_descriptors(template_kps, template_des, image_kps, image_des,
+                                                         template_size):
+    """Find the template in the image using the extracted feature descriptors.
+
+    :param template_kps:
+    :param template_des:
+    :param image_kps:
+    :param image_des:
+    :param template_size:
+
+    :returns: coordinates
+    :rtype: tuple
+
+    """
 
     # Create BFMatcher object
     bf = cv2.BFMatcher(cv2.NORM_L2SQR, crossCheck=True)
@@ -264,12 +319,13 @@ def register_images_opencv_features(source, target, detector="surf", use_latch_d
     :param affine: register the image using an affine transformation (optional, default=False).
     :param rigid: register the image using a rigid transformation (optional, default=False).
     :param control_image: set to True to create a quality control image (default is False).
-    :return: (aligned: aligned image,
-              M : transformation matrix,
-              mask: mask returned by cv2.findHomography(),
-              view: quality control image,
-              source_descr: list of source descriptors,
-              target_descr: list of target descriptors).
+
+    :returns: results (aligned: aligned image, M : transformation matrix, mask: mask returned by cv2.findHomography()),
+    :rtype: dict
+    :returns: view: quality control image,
+    :returns: source_descr: list of source descriptors,
+    :returns: target_descr: list of target descriptors).
+
     """
 
     # Initialize feature detector
@@ -385,29 +441,34 @@ def register_images_opencv_features(source, target, detector="surf", use_latch_d
         # Add the results dictionary
         results["perspective"] = aligned, M, mask
 
-
     # Return
     return results, view, source_descr, target_descr
 
 
-def apply_transformation_to_image(image, transformation_type, transformation_matrix, target_height=None, target_width=None):
+def apply_transformation_to_image(image, transformation_type, transformation_matrix, target_height=None,
+                                  target_width=None):
     """Apply a transformation to an image.
 
-    Keyword arguments:
-    :param image: image to be transformed.
-    :param transformation_type: type of transformation. One of:
-        "perspective": register the image using a perspective transformation.
-        "affine": register the image using an affine transformation.
-        "rigid": register the image using a rigid transformation.
-    :param transformation_matrix: transformation matrix, must be:
-        "perspective": (3x3)
-        "affine": (2x3)
-        "rigid": (2x3)
-    :param target_height: (optional) number of rows of the transformed image. If not set, the transformed image
+    :param image:
+        image to be transformed.
+    :param transformation_type:
+        type of transformation. One of:
+            "perspective": register the image using a perspective transformation.
+            "affine": register the image using an affine transformation.
+            "rigid": register the image using a rigid transformation.
+    :param transformation_matrix:
+        transformation matrix, must be:
+            "perspective": (3x3)
+            "affine": (2x3)
+            "rigid": (2x3)
+    :param target_height:
+        (optional) number of rows of the transformed image. If not set, the transformed image
         will have the same size as the source image.
-    :param target_width: (optional) number of columns of the transformed image. If not set, the transformed image
+    :param target_width:
+        (optional) number of columns of the transformed image. If not set, the transformed image
         will have the same size as the source image.
-    :return: transformed: transformed image.
+
+    :returns: transformed: transformed image.
     """
 
     if target_height is None or target_width is None:
@@ -432,7 +493,20 @@ def apply_transformation_to_image(image, transformation_type, transformation_mat
 
 
 def display_matches(img1, img2, sel_matches, k1, k2, max_matches=None):
-    """Displays the matches on a control image and returns it."""
+    """Displays the matches on a control image and returns it.
+
+    :param img1:
+        First image
+    :param img2:
+        Second image
+    :param sel_matches:
+        Selected matches
+    :param k1:
+    :param k2:
+    :param max_matches:
+
+    :returns: view
+    """
 
     # If img1 and img2 are RGB, convert them to gray values first
     if np.ndim(img1) == 3:
@@ -473,6 +547,22 @@ def add_border(images: list, border: int, fill_value: int = -1) -> list:
     """Add a border to each of the images in a list and sets the border values to a given fill value.
 
     If the fill_value is omitted, the median of all pixel intensities will taken.
+
+    :param images:
+        List of images
+    :type images: list
+
+    :param border:
+        Border to be added to image
+    :type border: int
+
+    :param fill_value:
+        (optional) If omitted the median of all pixel intensities will taken.
+    :type border: int
+
+    :returns: out:
+        List of images with added border.
+    :rtype: list
     """
     out = []
     for img in images:
@@ -495,7 +585,17 @@ def add_border(images: list, border: int, fill_value: int = -1) -> list:
 
 
 def BGR2Gray(image, to_lightness=False):
-    """Convert a BGR image to gray or lightness."""
+    """Convert a BGR image to gray or lightness.
+
+    :param image:
+        Image to be converted
+    :param to_lightness:
+        To lightness bool
+
+    :returns: l
+    :rtype: cv2.Image
+
+    """
 
     # If the image is already 2D, do nothing
     if image.ndim == 2:

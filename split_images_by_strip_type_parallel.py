@@ -28,6 +28,33 @@ from pypocquant.lib.io import load_and_process_image
 
 
 def run_pool(files, input_folder_path, output_folder_path, undefined_path, max_workers=4, manufacturer_names=[]):
+    """ Tread pool to run split images in parallel on different workers.py
+
+    :param files:
+        List of image file names to be split
+    :type files: list
+
+    :param input_folder_path:
+        Path to the input folder
+    :type input_folder_path: str
+
+    :param output_folder_path:
+        Path to the output folder
+    :type output_folder_path: str
+
+    :param undefined_path:
+        Path to the undefined folder where unidentified images will be kept.
+    :type undefined_path: str
+
+    :param max_workers:
+        Max number of workers to use.
+    :type max_workers: int
+
+    :param manufacturer_names:
+        List of manufacturer names.
+    :type manufacturer_names: list
+
+    """
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         run_n = partial(run, input_folder_path=input_folder_path, output_folder_path=output_folder_path,
                         undefined_path=undefined_path, manufacturer_names=manufacturer_names)
@@ -35,6 +62,31 @@ def run_pool(files, input_folder_path, output_folder_path, undefined_path, max_w
 
 
 def run(filename, input_folder_path, output_folder_path, undefined_path, manufacturer_names):
+    """ Runnable for splitting images by type in parallel to
+
+    :param filename:
+        Name of an image file.
+    :type filename: str
+
+    :param input_folder_path:
+        Path to the input folder
+    :type input_folder_path: str
+
+    :param output_folder_path:
+        Path to the output folder
+    :type output_folder_path: str
+
+    :param undefined_path:
+        Path to the undefined folder where unidentified images will be kept
+    :type undefined_path: str
+
+    :param manufacturer_names:
+        List of manufacturer names.
+    :type manufacturer_names: list
+
+    :returns: void
+
+    """
 
     # Load  the image
     image = load_and_process_image(str(input_folder_path / filename), raw_auto_stretch=False, raw_auto_wb=False)
@@ -107,6 +159,8 @@ if __name__ == '__main__':
     # Parsing input arguments
     #
     parser = argparse.ArgumentParser(description='Split images by strip type.')
+    """ Input argument parser for split images by strip type. This is the command line interface for splitting images 
+    of a same kind (i.e same manufacturer)."""
 
     # Input folder
     parser.add_argument(

@@ -40,7 +40,15 @@ def default_settings():
 
 
 def load_settings(filename):
-    """Loads settings from file and returns them in a dictionary."""
+    """Loads settings from file and returns them in a dictionary.
+
+    :param filename:
+        Name of the settings file.
+    :type filename: str
+
+    :returns: settings_dictionary
+    :rtype: dict
+    """
     settings_dictionary = {}
     with open(filename, "r") as f:
         lines = f.readlines()
@@ -51,7 +59,14 @@ def load_settings(filename):
 
 
 def save_settings(settings_dictionary, filename):
-    """Save settings from a dictionary to file."""
+    """Save settings from a dictionary to file.
+
+    :param settings_dictionary:
+        Settings dictionary
+    :param filename:
+        Filename of the settings file to be saved.
+    :type filename: str
+    """
     with open(filename, "w+") as f:
         for key in settings_dictionary:
             if type(settings_dictionary[key]) == str:
@@ -61,7 +76,15 @@ def save_settings(settings_dictionary, filename):
 
 
 def load_list_file(filename):
-    """Loads list from file and returns them as list."""
+    """Loads list from file and returns them as list.
+
+    :param filename:
+        Filename of the settings file to be loaded.
+    :type filename: str
+
+    :returns: file_content_list
+    :rtype: list
+    """
     file_content_list = []
     with open(filename, "r") as f:
         lines = f.readlines()

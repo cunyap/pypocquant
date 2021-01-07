@@ -39,6 +39,14 @@ from pypocquant.lib.consts import BAND_COLORS
 
 
 def get_min_dist(xy1, xy2):
+    """ Determine the minimal euclidean distance of a set of coordinates.
+
+    :param xy1: First set of coordinates
+    :param xy2: Second set of ccordinates
+
+    :returns: Minimal distance
+    :rtype: tuple
+    """
     dists = cdist(xy2, xy1, metric='euclidean')
     return np.min(dists), np.argmin(dists)
 
@@ -67,7 +75,7 @@ def identify_bars_alt(
     :param tolerance:
         Distance tolerance between pean position and expected position for assignment.
 
-    :return dictionary of band assignments: {bar_name: index}
+    :returns: dictionary of band assignments: {bar_name: index}
     """
 
     # Instantiate results dictionary
@@ -105,12 +113,34 @@ def identify_bars_alt(
 
 
 def invert_image(image, bit_depth=8):
+    """Inverts an image.
+
+    :param image:
+        Image to be inverted
+    :param bit_depth:
+        Bit depth of image
+
+    :returns: image_inv:
+        Inverted image.
+    :rtype: uint8
+    """
     image_inv = (2 ** bit_depth - image)
     return image_inv.astype('uint8')
 
 
 def local_minima(array, min_distance=1):
-    """Find all local minima of the array, separated by at least min_distance."""
+    """Find all local minima of the array, separated by at least min_distance.
+
+    :param array:
+        Signal array
+    :param min_distance:
+        Minimal distance for local minima seperation
+
+    :returns:   array:
+        Array with local minimas
+    :rtype: np.array
+
+    """
     max_points = array == ndimage.maximum_filter(
         array, 1 + 2 * min_distance, mode='constant', cval=array.max() + 1)
     return np.array([indices[max_points] for indices in np.indices(array.shape)])
@@ -118,7 +148,31 @@ def local_minima(array, min_distance=1):
 
 def _find_lower_background(profile: np.ndarray, peak_index: int, lowest_bound: int, max_skip: int = 1):
     """This method is used by find_peak_bounds() and is not meant to be used as
-    a standalone method."""
+    a standalone method.
+
+    :param profile:
+        Signal profile
+    :type profile: np.ndarray
+
+    :param peak_index:
+       Index of the peak
+    :type peak_index: int
+
+    :param lowest_bound:
+        Highest bound
+    :type lowest_bound: int
+
+    :param max_skip:
+        Max skip
+    :type max_skip: int
+
+    :returns: current_lower_bound:
+        Upper bound
+    :returns: current_lower_background:
+        Upper background
+    :returns: d_lower:
+
+    """
 
     # Peak intensity
     peak_intensity = profile[peak_index]
@@ -143,7 +197,31 @@ def _find_lower_background(profile: np.ndarray, peak_index: int, lowest_bound: i
 
 def _find_upper_background(profile: np.ndarray, peak_index: int, highest_bound: int, max_skip: int = 1):
     """This method is used by find_peak_bounds() and is not meant to be used as
-    a standalone method."""
+    a standalone method.
+
+    :param profile:
+        Signal profile
+    :type profile: np.ndarray
+
+    :param peak_index:
+       Index of the peak
+    :type peak_index: int
+
+    :param highest_bound:
+        Highest bound
+    :type highest_bound: int
+
+    :param max_skip:
+        Max skip
+    :type max_skip: int
+
+    :returns: current_upper_bound:
+        Upper bound
+    :returns: current_upper_background:
+        Upper background
+    :returns: d_upper:
+
+    """
 
     # Peak intensity
     peak_intensity = profile[peak_index]
@@ -168,7 +246,31 @@ def _find_upper_background(profile: np.ndarray, peak_index: int, highest_bound: 
 
 
 def find_peak_bounds(profile, border, peak_index, image_log, verbose=False):
-    """Find the lower and upper bounds of current band."""
+    """Find the lower and upper bounds of current band.
+
+    :param profile:
+        Signal profile
+    :type profile: np.ndarray
+
+    :param border:
+        Border offset
+    :type border: int
+
+    :param peak_index:
+       Index of the peak
+    :type peak_index: int
+
+    :param image_log:
+        Image log
+    :type image_log: list
+
+    :returns: current_lower_bound:
+        Lower bound
+    :returns: current_upper_bound:
+        Upper bound
+    :returns: image_log:
+        Log for this image
+    """
 
     profile = np.asarray(profile)
 
@@ -253,7 +355,27 @@ def find_peak_bounds(profile, border, peak_index, image_log, verbose=False):
 
 
 def fit_and_subtract_background(profile, border, subtract_offset=10):
-    """Use a robust linear estimator to estimate the background of the profile and subtract it."""
+    """Use a robust linear estimator to estimate the background of the profile and subtract it.
+
+    :param profile:
+        Signal profile
+    :type profile: np.ndarray
+
+    :param border:
+        Border offset
+    :type border: int
+
+    :param subtract_offset:
+        Fixed offset to be used for substraction.
+    :type subtract_offset: int
+
+    :returns:  profile:
+        Background corrected profile.
+    :returns:  background:
+        Estimated background.
+    :returns:  background_offset:
+        Background offset.
+    """
 
     # Prepare data
     y = profile[border:-border].squeeze()
@@ -288,6 +410,26 @@ def estimate_threshold_for_significant_peaks(
         profile: np.ndarray,
         border_x: int,
         thresh_factor: float):
+    """Estimate threshold for significant peaks in sensor signal.
+
+    :param profile:
+        Signal profile
+    :type profile: np.ndarray
+
+    :param border_x:
+        Border offset in x
+    :type border_x: int
+
+    :param thresh_factor:
+        Treshold factor for estimation.
+    :type thresh_factor: float
+
+    :returns: peak_threshold:
+    :returns: loc_min_indices
+    :returns: md
+    :returns: lowest_background_threshold
+
+    """
     # First find all local minima (add back the border offset)
     loc_min_indices = border_x + local_minima(profile[border_x: len(profile) - border_x])
 
@@ -332,6 +474,66 @@ def analyze_measurement_window(
     """Quantify the band signal across the sensor.
 
     Notice: the expected relative peak positions for the original strips were: [0.30, 0.52, 0.74]
+
+    :param window:
+        Window (image) to be analyzed.
+    :type window: np.ndarray
+
+    :param border_x:
+        Border offset in x from window.
+    :type border_x: int
+
+    :param border_y:
+        Border offset in y from window.
+    :type border_y: int
+
+    :param thresh_factor:
+        Threshold factor from background.
+    :type thresh_factor: float
+
+    :param peak_width:
+        Minimal width of a peak.
+    :type peak_width: int
+
+    :param sensor_band_names:
+        Names of the sensor bands (test lines TL).
+    :type sensor_band_names: [str, ...]
+
+    :param peak_expected_relative_location:
+        Tuple of relative expected peak positions in respect to the window.
+    :type peak_expected_relative_location: tuple[float, ...]
+
+    :param control_band_index:
+        Index of the control band for the list `sensor_band_names`.
+    :type control_band_index: int
+
+    :param subtract_background:
+        Bool to substract background.
+    :type subtract_background: bool
+
+    :param qc:
+        Bool to retrun qc image.
+    :type qc: bool
+
+    :param verbose:
+        Bool to return verbose logging information
+    :type verbose: bool
+
+    :param out_qc_folder:
+        QC image output folder
+    :type out_qc_folder: Path
+
+    :param basename:
+        Basename
+    :type basename: str
+    :param image_log:
+        Image log list.
+    :type image_log: list
+
+    :returns: merged_results:
+        Merged results
+    :returns: image_log
+        Image log
     """
 
     # Initialize profile
@@ -571,7 +773,19 @@ def analyze_measurement_window(
 
 
 def extract_inverted_sensor(gray, sensor_center=(119, 471), sensor_size=(40, 190)):
-    """Returns the sensor area at the requested position without searching."""
+    """Returns the sensor area at the requested position without searching.
+
+    :param gray:
+        Gray image.
+    :param sensor_center:
+        Sensor center coordinate on gray image.
+    :param sensor_size:
+        Sensor size on gray image.
+
+    :returns: inverted_image
+        Returns the extracted sensor on an inverted image.
+
+    """
     x0 = sensor_center[1] - sensor_size[1] // 2
     x = x0 + sensor_size[1]
     y0 = sensor_center[0] - sensor_size[0] // 2
@@ -613,10 +827,10 @@ def get_sensor_contour_fh(
         Minimum width of the control bar (in pixels).
         (Optional, default 7)
 
-    :return Tuple:
-        Realigned sensor: np.ndarray
-        Sensor coordinates: [y0, y, x0, x]
-        sensor_score: score for the sensor extracted (obsolete: fixed at 1.0)
+    :returns: Realigned sensor: np.ndarray
+    :returns: Sensor coordinates: [y0, y, x0, x]
+    :returns: sensor_score: score for the sensor extracted (obsolete: fixed at 1.0)
+    :rtype: tuple
     """
 
     # Input argument sanitation
@@ -734,7 +948,19 @@ def get_sensor_contour_fh(
 
 
 def extract_rotated_strip_from_box(box_gray, box):
-    """Segments the strip from the box image and rotates it so that it is horizontal."""
+    """Segments the strip from the box image and rotates it so that it is horizontal.
+
+    :param box_gray:
+        Gray image of QR code box containing strip
+    :param box:
+        RGB image of QR code box containing strip
+
+    :returns: strip_gray
+        Extracted gray strip from box
+    :returns: strip
+        Extracted RGB strip from box
+
+    """
 
     # Segment using Li
     optimal_threshold = filters.threshold_li(box_gray)
@@ -918,7 +1144,26 @@ def extract_rotated_strip_from_box(box_gray, box):
 
 
 def adapt_bounding_box(bw, x0, y0, width, height, fraction=0.75):
-    """Make the bounding box come closer to the strip by remove bumps along the outline."""
+    """Make the bounding box come closer to the strip by remove bumps along the outline.
+
+    :param bw:
+        Binary mask of an image.
+    :param x0:
+        Top left corner in x.
+    :param y0:
+        Top left corner in y
+    :param width:
+        Mask width
+    :param height:
+        Mask height
+    :param fraction:
+
+    :returns: new_y0:
+    :returns: new_y:
+    :returns: new_x0:
+    :returns: new_x:
+
+    """
 
     # Make sure we have a binary mask
     bw = bw > 0
@@ -964,7 +1209,17 @@ def adapt_bounding_box(bw, x0, y0, width, height, fraction=0.75):
 
 
 def point_in_rect(point, rect):
-    """Check if the given point (x, y) is contained in the rect (x0, y0, width, height)."""
+    """Check if the given point (x, y) is contained in the rect (x0, y0, width, height).
+
+    :param point:
+        Point to be checked if in rectangle
+    :param rect
+        Rectangle defined by (x0, y0, width, height)
+
+    returns bool:
+    :rtype: bool
+
+    """
     x1, y1, w, h = rect
     x2, y2 = x1 + w, y1 + h
     x, y = point
@@ -994,7 +1249,11 @@ def get_rectangles_from_image_and_rectangle_props(
              rectangle_props[2]: relative distance of the left edge of the left rectangle
                                  with respect to the center of the image.
 
-    :return Tuple containing left and right rectangles
+    :returns:  left_rect:
+        Left rectangles
+    :returns:  right_rect:
+        Right rectangles
+    :rtype: tuple
     """
 
     # Define shape of search rectangles
@@ -1050,6 +1309,20 @@ def use_hough_transform_to_rotate_strip_if_needed(
 
     :param qc: bool
         If True, create quality control images.
+
+    :returns: img_gray:
+        Gray image.
+    :returns: img:
+        RGB Image.
+    :returns: qc_image
+        QC imageg.
+    :returns: rotated
+        Bool; true if was rotated
+    :returns:  left_rect:
+        Left rectangles
+    :returns:  right_rect:
+        Right rectangles
+    :rtype: tuple
     """
 
     # Initialize quality control image if needed
@@ -1203,6 +1476,25 @@ def use_ocr_to_rotate_strip_if_needed(img_gray, img=None, text="COVID", on_right
     side of the strip; if it is found on the other side, rotate the strip.
 
     We apply the same rotation also to the second image, if passed.
+
+    :param img_gray:
+        Gray input image to be potentially rotated.
+
+    :param img:
+        RGB input image to be potentially rotated.
+
+    :param text:
+        Text to be identified by OCR.
+
+    :param on_right:
+        Position of text to be identified in respect to the strip orientation.
+
+    :returns: img_gray:
+        Gray image.
+    :returns: img:
+        RGB Image.
+    :returns: rotated
+        Bool; true if was rotated
     """
 
     rotated = False
@@ -1303,7 +1595,19 @@ def use_ocr_to_rotate_strip_if_needed(img_gray, img=None, text="COVID", on_right
 def read_patient_data_by_ocr(
         image,
         known_manufacturers=consts.KnownManufacturers):
-    """Try to extract the patient data by OCR."""
+    """Try to extract the patient data by OCR.
+
+    :param image:
+        Input image to be read with OCR.
+    :param known_manufacturers:
+        List with known manufacturers.
+
+    :returns: fid:
+        FID number.
+    :returns: manufacturer:
+        manufacturer name.
+
+    """
 
     # Use a gray-value image (works better than RGB)
     image_gray = BGR2Gray(image)

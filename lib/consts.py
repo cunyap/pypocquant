@@ -16,6 +16,10 @@ from pyzbar.pyzbar import ZBarSymbol
 
 
 class Issue(Enum):
+    """Issues detected during image processing.
+
+    :returns: Issue code
+    """
     NONE = 0
     BARCODE_EXTRACTION_FAILED = 1
     FID_EXTRACTION_FAILED = 2
@@ -28,6 +32,12 @@ class Issue(Enum):
 
 
 class SymbolTypes(Enum):
+    """SymbolTypes of zbar. Currently we support CODE39, CODE128 and QRCODE detection.
+    :param Enum:
+
+    :returns: TYPES
+    :rtype: list
+    """
     TYPES = [ZBarSymbol.CODE39, ZBarSymbol.CODE128, ZBarSymbol.QRCODE]
 
 

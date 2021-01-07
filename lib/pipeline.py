@@ -45,6 +45,135 @@ def run_pool(files, raw_auto_stretch, raw_auto_wb, input_folder_path,
              control_band_index, subtract_background,
              force_fid_search, sensor_band_names,
              verbose, qc, max_workers=4):
+    """Run a thread pool for the analysis.
+
+    :param files:
+        List with image file names to be processed
+    :type files: list
+
+    :param raw_auto_stretch:
+        Whether to automatically correct the white balance of RAW images on load.
+        This does not affect JPEG images!
+    :type raw_auto_stretch: bool
+
+    :param raw_auto_wb:
+        Whether to automatically stretch image intensities of RAW images on load.
+        This does not affect JPEG images!
+    :type raw_auto_wb: bool
+
+    :param input_folder_path:
+        Folder with the raw images to process.
+    :type input_folder_path: str
+
+    :param results_folder_path:
+        Target folder, where all results and quality control figures are written.
+    :type results_folder_path: str
+
+    :param strip_try_correct_orientation:
+        Try to assess and possibly correct for wrong orientation of the strip by searching for the
+        position of the injection inlet.
+    :type strip_try_correct_orientation: bool
+
+    :param strip_try_correct_orientation_rects:
+        Tuple containing information about the relative position of the two rectangles
+        to be searched for the inlet on both sides of the center of the image:
+             rectangle_props[0]: relative (0..1) vertical height of the rectangle with
+                                 respect to the image height.
+             rectangle_props[1]: relative (0..1) distance of the left edge of the right rectangle
+                                 with respect to the center of the image.
+             rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
+                                 with respect to the center of the image.
+    :type strip_try_correct_orientation_rects: tuple
+
+    :param strip_text_to_search:
+        Text to search on the strip to assess orientation. Set to "" to skip.
+    :type strip_text_to_search: str
+
+    :param strip_text_on_right:
+        Assuming the strip is oriented horizontally, whether the 'strip_text_to_search' text
+        is assumed to be on the right. If 'strip_text_on_right' is True and the text is found on the
+        left hand-side of the strip, the strip will be rotated 180 degrees. Ignored if
+        strip_text_to_search is "".
+    :type strip_text_on_right: bool
+
+    :param min_sensor_score:
+        Minimum segmentation score for the sensor to be considered peak analysis (0.0 <= min_sensor_score <= 1.0).
+        **This is currently ignored.**
+    :type min_sensor_score: float
+
+    :param qr_code_border:
+        Lateral and vertical extension of the (white) border around each QR code.
+    :type qr_code_border: int
+
+    :param perform_sensor_search:
+        If True, the (inverted) sensor is searched within 'sensor_search_area' around the expected 'sensor_center';
+        if False, the sensor of size 'sensor_size' is simply extracted from the strip image centered at the
+        relative strip position 'sensor_center'.
+    :type perform_sensor_search: bool
+
+    :param sensor_size:
+        Area of the sensor to be extracted (height, width).
+    :type sensor_size: tuple
+
+    :param sensor_center:
+        Coordinates of the center of the sensor with respect to the strip image (y, x).
+    :type sensor_center: tuple
+
+    :param sensor_search_area:
+        Search area around the sensor (height, width). Used only if 'skip_sensor_search' is False.
+    :type sensor_search_area: tuple
+
+    :param sensor_thresh_factor:
+        Set the number of (robust) standard deviations away from the median band background for a peak
+        to be considered valid.
+    :type sensor_thresh_factor: int
+
+    :param sensor_border:
+        Lateral and vertical sensor border to be ignored in the analysis to avoid border effects.
+    :type sensor_border: tuple
+
+    :param peak_expected_relative_location:
+        Expected relative peak positions as a function of the width of the sensor (= 1.0)
+    :type peak_expected_relative_location: tuple
+
+    :param control_band_index:
+        Index of the control band in the peak_expected_relative_location.
+        (Optional, default -1 := right-most)
+    :type control_band_index: int
+
+    :param subtract_background:
+        If True, estimate and subtract the background of the sensor intensity profile.
+    :type subtract_background: bool
+
+    :param force_fid_search:
+        If True, apply a series of search fall-back approaches to extract patient data from
+        the image. Only use this if the expected QR code with patient data was not added to
+        the image or could not be extracted.
+    :type force_fid_search: bool
+
+    :param sensor_band_names:
+        Names of the bands for the data frame header. Please notice: the third ([2]) band is
+        always the control band.
+    :type sensor_band_names: tuple
+
+    :param verbose:
+        Toggle verbose output.
+    :type verbose: bool
+
+    :param qc:
+        Toggle creation of quality control figures.
+    :type qc: bool
+
+    :param max_workers:
+        Number of max cores to use for running the pipeline
+    :type max_workers: int
+
+    :returns: res
+    :rtype: list
+    :returns: log_list
+    :rtype: list
+    """
+
     res = []
     log_list = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -101,28 +230,30 @@ def run_pipeline(
 ):
     """Run the whole processing and analysis pipeline.
 
-    Parameters
-    ----------
-
-    :param input_folder_path: str
+    :param input_folder_path:
         Folder with the raw images to process.
+    :type input_folder_path: str
 
-    :param results_folder_path: str
+    :param results_folder_path:
         Target folder, where all results and quality control figures are written.
+    :type results_folder_path: str
 
-    :param raw_auto_stretch: bool
+    :param raw_auto_stretch:
         Whether to automatically correct the white balance of RAW images on load.
         This does not affect JPEG images!
+    :type raw_auto_stretch: bool
 
-    :param raw_auto_wb: bool
+    :param raw_auto_wb:
         Whether to automatically stretch image intensities of RAW images on load.
         This does not affect JPEG images!
+    :type raw_auto_wb: bool
 
-    :param strip_try_correct_orientation: bool
+    :param strip_try_correct_orientation:
         Try to assess and possibly correct for wrong orientation of the strip by searching for the
         position of the injection inlet.
+    :type strip_try_correct_orientation: bool
 
-    :param strip_try_correct_orientation_rects: tuple
+    :param strip_try_correct_orientation_rects:
         Tuple containing information about the relative position of the two rectangles
         to be searched for the inlet on both sides of the center of the image:
              rectangle_props[0]: relative (0..1) vertical height of the rectangle with
@@ -131,71 +262,90 @@ def run_pipeline(
                                  with respect to the center of the image.
              rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
                                  with respect to the center of the image.
+    :type strip_try_correct_orientation_rects: tuple
 
-    :param strip_text_to_search: str
+    :param strip_text_to_search:
         Text to search on the strip to assess orientation. Set to "" to skip.
+    :type strip_text_to_search: str
 
-    :param strip_text_on_right: bool
+    :param strip_text_on_right:
         Assuming the strip is oriented horizontally, whether the 'strip_text_to_search' text
         is assumed to be on the right. If 'strip_text_on_right' is True and the text is found on the
         left hand-side of the strip, the strip will be rotated 180 degrees. Ignored if
         strip_text_to_search is "".
+    :type strip_text_on_right: bool
 
-    :param min_sensor_score: float
+    :param min_sensor_score:
         Minimum segmentation score for the sensor to be considered peak analysis (0.0 <= min_sensor_score <= 1.0).
         **This is currently ignored.**
+    :type min_sensor_score: float
 
-    :param qr_code_border: int
+    :param qr_code_border:
         Lateral and vertical extension of the (white) border around each QR code.
+    :type qr_code_border: int
 
-    :param perform_sensor_search: bool
+    :param perform_sensor_search:
         If True, the (inverted) sensor is searched within 'sensor_search_area' around the expected 'sensor_center';
         if False, the sensor of size 'sensor_size' is simply extracted from the strip image centered at the
         relative strip position 'sensor_center'.
+    :type perform_sensor_search: bool
 
-    :param sensor_size: tuple
+    :param sensor_size:
         Area of the sensor to be extracted (height, width).
+    :type sensor_size: tuple
 
-    :param sensor_center:: tuple
+    :param sensor_center:
         Coordinates of the center of the sensor with respect to the strip image (y, x).
+    :type sensor_center: tuple
 
-    :param sensor_search_area: tuple
+    :param sensor_search_area:
         Search area around the sensor (height, width). Used only if 'skip_sensor_search' is False.
+    :type sensor_search_area: tuple
 
-    :param sensor_thresh_factor: int
+    :param sensor_thresh_factor:
         Set the number of (robust) standard deviations away from the median band background for a peak
         to be considered valid.
+    :type sensor_thresh_factor: int
 
     :param sensor_border:
         Lateral and vertical sensor border to be ignored in the analysis to avoid border effects.
+    :type sensor_border: tuple
 
-    :param peak_expected_relative_location: tuple
+    :param peak_expected_relative_location:
         Expected relative peak positions as a function of the width of the sensor (= 1.0)
+    :type peak_expected_relative_location: tuple
 
-    :param control_band_index: int
+    :param control_band_index:
         Index of the control band in the peak_expected_relative_location.
         (Optional, default -1 := right-most)
+    :type control_band_index: int
 
-    :param subtract_background: bool
+    :param subtract_background:
         If True, estimate and subtract the background of the sensor intensity profile.
+    :type subtract_background: bool
 
-    :param force_fid_search: bool
+    :param force_fid_search:
         If True, apply a series of search fall-back approaches to extract patient data from
         the image. Only use this if the expected QR code with patient data was not added to
         the image or could not be extracted.
+    :type force_fid_search: bool
 
-    :param sensor_band_names: tuple
+    :param sensor_band_names:
         Names of the bands for the data frame header. Please notice: the third ([2]) band is
         always the control band.
+    :type sensor_band_names: tuple
 
-    :param verbose: bool
+    :param verbose:
         Toggle verbose output.
+    :type verbose: bool
 
-    :param qc: bool
+    :param qc:
         Toggle creation of quality control figures.
+    :type qc: bool
 
-    :param max_workers int
+    :param max_workers:
         Number of max cores to use for running the pipeline
+    :type max_workers: int
     """
 
     # Set the path to the tesseract executable
@@ -287,6 +437,128 @@ def run(
         sensor_band_names: tuple = ('igm', 'igg', 'ctl'),
         verbose: bool = False,
         qc: bool = False):
+    """Runnable which runs the analysis on a worker
+
+    :param filename:
+        Image file name to be processed
+    :type filename: list
+
+    :param raw_auto_stretch:
+        Whether to automatically correct the white balance of RAW images on load.
+        This does not affect JPEG images!
+    :type raw_auto_stretch: bool
+
+    :param raw_auto_wb:
+        Whether to automatically stretch image intensities of RAW images on load.
+        This does not affect JPEG images!
+    :type raw_auto_wb: bool
+
+    :param input_folder_path:
+        Folder with the raw images to process.
+    :type input_folder_path: str
+
+    :param results_folder_path:
+        Target folder, where all results and quality control figures are written.
+    :type results_folder_path: str
+
+    :param strip_try_correct_orientation:
+        Try to assess and possibly correct for wrong orientation of the strip by searching for the
+        position of the injection inlet.
+    :type strip_try_correct_orientation: bool
+
+    :param strip_try_correct_orientation_rects:
+        Tuple containing information about the relative position of the two rectangles
+        to be searched for the inlet on both sides of the center of the image:
+             rectangle_props[0]: relative (0..1) vertical height of the rectangle with
+                                 respect to the image height.
+             rectangle_props[1]: relative (0..1) distance of the left edge of the right rectangle
+                                 with respect to the center of the image.
+             rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
+                                 with respect to the center of the image.
+    :type strip_try_correct_orientation_rects: tuple
+
+    :param strip_text_to_search:
+        Text to search on the strip to assess orientation. Set to "" to skip.
+    :type strip_text_to_search: str
+
+    :param strip_text_on_right:
+        Assuming the strip is oriented horizontally, whether the 'strip_text_to_search' text
+        is assumed to be on the right. If 'strip_text_on_right' is True and the text is found on the
+        left hand-side of the strip, the strip will be rotated 180 degrees. Ignored if
+        strip_text_to_search is "".
+    :type strip_text_on_right: bool
+
+    :param min_sensor_score:
+        Minimum segmentation score for the sensor to be considered peak analysis (0.0 <= min_sensor_score <= 1.0).
+        **This is currently ignored.**
+    :type min_sensor_score: float
+
+    :param qr_code_border:
+        Lateral and vertical extension of the (white) border around each QR code.
+    :type qr_code_border: int
+
+    :param perform_sensor_search:
+        If True, the (inverted) sensor is searched within 'sensor_search_area' around the expected 'sensor_center';
+        if False, the sensor of size 'sensor_size' is simply extracted from the strip image centered at the
+        relative strip position 'sensor_center'.
+    :type perform_sensor_search: bool
+
+    :param sensor_size:
+        Area of the sensor to be extracted (height, width).
+    :type sensor_size: tuple
+
+    :param sensor_center:
+        Coordinates of the center of the sensor with respect to the strip image (y, x).
+    :type sensor_center: tuple
+
+    :param sensor_search_area:
+        Search area around the sensor (height, width). Used only if 'skip_sensor_search' is False.
+    :type sensor_search_area: tuple
+
+    :param sensor_thresh_factor:
+        Set the number of (robust) standard deviations away from the median band background for a peak
+        to be considered valid.
+    :type sensor_thresh_factor: int
+
+    :param sensor_border:
+        Lateral and vertical sensor border to be ignored in the analysis to avoid border effects.
+    :type sensor_border: tuple
+
+    :param peak_expected_relative_location:
+        Expected relative peak positions as a function of the width of the sensor (= 1.0)
+    :type peak_expected_relative_location: tuple
+
+    :param control_band_index:
+        Index of the control band in the peak_expected_relative_location.
+        (Optional, default -1 := right-most)
+    :type control_band_index: int
+
+    :param subtract_background:
+        If True, estimate and subtract the background of the sensor intensity profile.
+    :type subtract_background: bool
+
+    :param force_fid_search:
+        If True, apply a series of search fall-back approaches to extract patient data from
+        the image. Only use this if the expected QR code with patient data was not added to
+        the image or could not be extracted.
+    :type force_fid_search: bool
+
+    :param sensor_band_names:
+        Names of the bands for the data frame header. Please notice: the third ([2]) band is
+        always the control band.
+    :type sensor_band_names: tuple
+
+    :param verbose:
+        Toggle verbose output.
+    :type verbose: bool
+
+    :param qc:
+        Toggle creation of quality control figures.
+    :type qc: bool
+
+    :returns: row_data
+    :returns: image_log
+    """
 
     # Initialize the log list
     image_log = [f" ", f"File = {filename}"]

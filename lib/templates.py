@@ -20,8 +20,11 @@ from pypocquant.lib.utils import get_templates_folder
 def load_templates_orig(scaled_size=(237, 837)):
     """Load templates to be used for registrations.
 
-    :param scaled_size: tuple
+    :param scaled_size:
         Final dimension of the template: (height, width)
+    :type scaled_size: tuple
+
+    :returns: template
     """
 
     # Read from the pyPOCQuant template folder
@@ -140,8 +143,11 @@ def load_templates_orig(scaled_size=(237, 837)):
 def load_templates_TPH(scaled_size=(237, 870)):
     """Load templates to be used for registrations.
 
-    :param scaled_size: tuple
+    :param scaled_size:
         Final dimension of the template: (height, width)
+    :type scaled_size: tuple
+
+    :returns: template
     """
 
     # Read from the pyPOCQuant template folder
@@ -176,8 +182,11 @@ def load_templates_TPH(scaled_size=(237, 870)):
 def load_templates_FH(scaled_size=(237, 870)):
     """Load templates to be used for registrations.
 
-    :param scaled_size: tuple
+    :param scaled_size:
         Final dimension of the template: (height, width)
+    :type scaled_size: tuple
+
+    :returns: template
     """
 
     # Read from the pyPOCQuant template folder

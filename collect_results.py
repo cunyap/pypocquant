@@ -18,7 +18,21 @@ from pathlib import Path
 
 
 def process(input_folder, output_folder, results_file_name='quantification_data.csv'):
-    """Process input folder recursively."""
+    """Process input folder recursively to collect all results with the `results_file_name`.
+
+    :param input_folder:
+        Path to results input folder.
+    :type input_folder: str
+
+    :param output_folder:
+        Path to output folder for storing collected results.
+    :type output_folder: str
+
+    :param results_file_name:
+        File name of the results.
+    :type results_file_name: str
+
+    """
 
     # Get list of dirs right under input_folder
     dirs = os.listdir(input_folder)
@@ -49,7 +63,9 @@ if __name__ == '__main__':
     #
     # Parsing input arguments
     #
-    parser = argparse.ArgumentParser(description='Split images by strip type.')
+    parser = argparse.ArgumentParser(description='Collect results file recursively.')
+    """ Input argument parser for collecting results file.
+    """
 
     # Input folder
     parser.add_argument(

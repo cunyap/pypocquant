@@ -36,16 +36,22 @@ def create_quality_control_images(
         extension: str = ".png",
         quality: int = 100):
     """Save the list of requested quality control images.
-    :type results_folder_path: str
+
+    :param results_folder_path:
         Full path to the folder where to save the quality control images.
-    :param basename: str
+    :type results_folder_path: str
+    :param basename:
         Common base name for all quality control images.
-    :param map_of_images: dict
+    :type basename: str
+    :param map_of_images:
         Dictionary of keys to be appended to the base name with the corresponding image as value.
-    :param extension: str
+    :type map_of_images: dict
+    :param extension:
         File extension (format). Optional, default is .png.
-    :param quality: int
+    :type extension: str
+    :param quality:
         Image compression quality. Optional, default is 100. This is only considered if format is ".jpg".
+    :type quality: int
     """
 
     # Check the format
@@ -70,7 +76,11 @@ def create_quality_control_images(
 
 
 def get_project_root() -> Path:
-    """Returns project root folder."""
+    """Returns project root folder.
+
+    :returns: project_root
+    :rtype: Path
+    """
     try:
         # Running from a pyinstaller executable
         project_root = Path(sys._MEIPASS)
@@ -80,7 +90,11 @@ def get_project_root() -> Path:
 
 
 def get_templates_folder() -> Path:
-    """Returns templates folder."""
+    """Returns templates folder.
+
+    :returns: templates_folder
+    :rtype: Path
+    """
     try:
         # Running from a pyinstaller executable
         templates_folder = Path(sys._MEIPASS) / "templates"
@@ -91,7 +105,11 @@ def get_templates_folder() -> Path:
 
 def get_data_folder() -> Path:
     """Returns the value of the environment variable DATA_FOLDER or,
-    if not found, the value if `get_project_root()`."""
+    if not found, the value if `get_project_root()`.
+
+    :returns: data_folder
+    :rtype: Path
+    """
 
     data_folder = ""
     if "DATA_FOLDER" in os.environ:
@@ -109,6 +127,17 @@ def image_format_converter(directory, filename, output_dir=None, image_format='t
        rawpy API: https://letmaik.github.io/rawpy/api/rawpy.RawPy.html,
                   https://letmaik.github.io/rawpy/api/rawpy.Params.html
 
+    :param directory:
+        Image directory
+    :param filename:
+        Filename of the image to be converted
+    :type filename: str
+    :param output_dir:
+        Output directory to write the converted image to.
+    :param image_format:
+        Format of the image such as i.e. tif
+    :type image_format: str
+
     """
 
     with rawpy.imread(str(directory.joinpath(filename))) as raw:
@@ -122,6 +151,15 @@ def image_format_converter(directory, filename, output_dir=None, image_format='t
 
 
 def get_iso_date_from_image(image_path):
+    """ Returns the date in iso-date format for the image at the given path.
+
+    :param image_path:
+       Path to an image.
+    :type image_path: str
+
+    :returns: iso_date
+    :returns: iso_time
+    """
     # get all Exif image metadata
     f = open(image_path, 'rb')
     tags = exifread.process_file(f)
@@ -145,6 +183,18 @@ def get_iso_date_from_image(image_path):
 
 
 def get_exif_details(image_path):
+    """ Returns the Exif metadata for the image at the given path. In particular EXIF ExposureTime, EXIF FNumber,
+    EXIF FocalLengthIn35mmFilm, EXIF ISOSpeedRatings.
+
+    :param image_path:
+       Path to an image.
+    :type image_path: str
+
+    :returns: exp_time
+    :returns: f_number
+    :returns: focal_length_35_mm
+    :returns: iso_speed
+    """
     # get all Exif image metadata
     f = open(image_path, 'rb')
     tags = exifread.process_file(f)
@@ -175,7 +225,16 @@ def get_exif_details(image_path):
 
     return exp_time, f_number, focal_length_35_mm, iso_speed
 
+
 def get_orientation_from_image(image_path):
+    """ Returns the image orientation for the image at the given path from the EXIF metadata.
+
+    :param image_path:
+       Path to an image.
+    :type image_path: str
+
+    :returns: orientation
+    """
     # get all Exif image metadata
     f = open(image_path, 'rb')
     tags = exifread.process_file(f)
@@ -186,6 +245,14 @@ def get_orientation_from_image(image_path):
 
 
 def is_on_path(prog):
+    """ Returns true if a certain program is on the environment variable PATH.
+
+     :param prog:
+        Name of a program
+     :type prog: str
+
+    :rtype: boolean
+    """
     for root_dir in os.environ['PATH'].split(os.pathsep):
         if os.path.exists(os.path.join(root_dir, prog)):
             return True
@@ -193,6 +260,8 @@ def is_on_path(prog):
 
 
 def set_tesseract_exe():
+    """ Sets the path to the executable of tesseract.
+    """
     if is_on_path('tesseract'):
         return
     else:
@@ -206,6 +275,15 @@ def set_tesseract_exe():
 
 
 def remove_filename_duplicates(data_frame):
+    """ Removes duplicates entry from a pandas data frame based on the column NAME.
+     :param data_frame:
+        Pandas data frame
+     :type data_frame: pd.DataFrame
+
+     :returns: data_frame
+     :rtype: pd.DataFrame
+
+     """
     df = data_frame.copy()
     dff = pd.Series([False] * df.shape[0])
     filename_no_ext = [os.path.splitext(x)[0] for x in df.FILENAME]

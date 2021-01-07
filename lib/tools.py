@@ -26,17 +26,21 @@ def extract_strip(image,
                   strip_text_on_right=True
     ):
     """Attempts to extract the strip from the original image.
-    :param image: numpy array
+
+    :param image:
         RGB image to be processed.
+    :type image: numpy array
 
-    :param qr_code_border: int
+    :param qr_code_border:
         Lateral and vertical extension of the (white) border around each QR code.
+    :type qr_code_border: int
 
-    :param strip_try_correct_orientation: bool
+    :param strip_try_correct_orientation:
         Try to assess and possibly correct for wrong orientation of the strip by searching for the
         position of the injection inlet.
+    :type strip_try_correct_orientation: bool
 
-    :param strip_try_correct_orientation_rects: tuple
+    :param strip_try_correct_orientation_rects:
         Tuple containing information about the relative position of the two rectangles
         to be searched for the inlet on both sides of the center of the image:
              rectangle_props[0]: relative (0..1) vertical height of the rectangle with
@@ -45,23 +49,29 @@ def extract_strip(image,
                                  with respect to the center of the image.
              rectangle_props[2]: relative (0..1) distance of the left edge of the left rectangle
                                  with respect to the center of the image.
+    :type strip_try_correct_orientation_rects: tuple
 
 
-    :param stretch_for_hough: bool (default, False)
+    :param stretch_for_hough:
         Set to True to apply auto-stretch to the image for Hough detection (1, 99 percentile).
+    :type stretch_for_hough: bool (default, False)
 
     :param strip_text_to_search: str
         Text to search on the strip to assess orientation. Set to "" to skip.
+    :type strip_text_to_search: str
 
-    :param strip_text_on_right: bool
+    :param strip_text_on_right:
         Assuming the strip is oriented horizontally, whether the 'strip_text_to_search' text
         is assumed to be on the right. If 'strip_text_on_right' is True and the text is found on the
         left hand-side of the strip, the strip will be rotated 180 degrees. Ignored if
         strip_text_to_search is "".
+    :type strip_text_on_right: bool
 
-    :return (strip, error_msg): Tuple
-        strip: Strip image (RGB) or None if extraction fails.
-        error_msg: If strip is None, the cause of failure will be stored in error_message.
+    :returns: strip_for_analysis: Strip image (RGB) or None if extraction fails.
+    :returns: error_msg: If strip is None, the cause of failure will be stored in error_message.
+    :returns: left_rect: Detected Hough circles in left_rect.
+    :returns: right_rect: Detected Hough circles in right_rect.
+    :rtype: tuple
     """
 
     # Find the location of the barcodes

@@ -25,16 +25,24 @@ def load_and_process_image(
     """Load a supported (standard) image file format such as '.jpg', '.tif', '.png' and
      some RAW file formats ('.nef', '.cr2', .'arw').
 
-     :param full_filename: str
+     :param full_filename:
         Full path to the file to open.
-     :param raw_auto_stretch: bool
-        (Only applies to RAW image file formats). Set to True to automatically stretch image intensities (default = False).
-     :param raw_auto_wb: bool
-        (Only applies to RAW image file formats). Set to True to automatically apply white-balancing (default = False).
-     :param to_rgb: bool
-        Set to True to convert from BGR (openCV standard, used in processing) to RGB (for display, default = False).
+     :type full_filename: str
 
-     :return image Loaded (and possibly processed) image, or None it the image could not be opened.
+     :param raw_auto_stretch:
+        (Only applies to RAW image file formats). Set to True to automatically stretch image intensities (default = False).
+     :type raw_auto_stretch: bool
+
+     :param raw_auto_wb:
+        (Only applies to RAW image file formats). Set to True to automatically apply white-balancing (default = False).
+     :type raw_auto_wb: bool
+
+     :param to_rgb:
+        Set to True to convert from BGR (openCV standard, used in processing) to RGB (for display, default = False).
+     :type to_rgb: bool
+
+     :returns: image: Loaded (and possibly processed) image, or None it the image could not be opened.
+     :rtype: cv2.Image
      """
 
     # Make sure full_filename is a string
@@ -97,10 +105,12 @@ def load_and_process_image(
 def is_raw(filename: str) -> bool:
     """Check whether the image is one of the supported RAW images
      (by checking the file extension.
+
      :param filename: Full file name.
      :type filename: str
 
-     :return True if the image is RAW, false otherwise.
+     :returns bool: True if the image is RAW, false otherwise.
+     :rtype: bool
      """
 
     # Check the extension
