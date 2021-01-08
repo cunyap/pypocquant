@@ -46,7 +46,12 @@ class Barcode(object):
 
     @classmethod
     def from_barcode(cls, barcode):
-        """Initialize from pyzbar barcode object."""
+        """Initialize from pyzbar barcode object.
+
+        :param barcode:
+            A barcode (QR, CODE39, CODE128).
+
+        """
         top = barcode.rect.top
         left = barcode.rect.left
         width = barcode.rect.width
@@ -59,6 +64,10 @@ class Barcode(object):
         """Scale the barcode object by given factor.
 
         The (top, left) is scaled accordingly.
+
+        :param factor:
+            Scaling factor for the barcode.
+
         """
         self.top = int(factor * self.top)
         self.left = int(factor * self.left)
@@ -87,6 +96,54 @@ def detect(image: np.ndarray, expected_area=22000, expected_aspect_ratio=7.5, ba
     Returns the extracted barcode image, the coordinates of the extracted rectangle,
     the (possibly rotated) image, and (if qc is True) a copy of the (possibly rotated)
     image with the extracted rectangle coordinates overlaid on it.
+
+    :param image:
+        Image from which barcode should be read
+    :type image: np.ndarray
+
+    :param expected_area:
+        Expected area for barcode.
+    :type expected_area: int
+
+    :param expected_aspect_ratio:
+        Aspect ratio for barcode.
+    :type expected_aspect_ratio: float
+
+    :param barcode_border:
+        Border of the barcode.
+    :type barcode_border: int
+
+    :param blur_size:
+        Kernel (3,3) by default for bluring the image.
+    :type blur_size: tuple
+
+    :param morph_rect:
+        Kernel (9,3) by default for morph rect.
+    :type morph_rect: tuple
+
+    :param mm_iter:
+        Dilation & Eroding iterations.
+    :type mm_iter: int
+
+    :param qc:
+        Bool, if true quality control images will be saved.
+    :type qc: bool
+
+    :param verbose:
+        Bool, if true additional loggin info will be displayed.
+    :type verbose: bool
+
+    :returns: barcode_img:
+        The image of the barcode.
+    :returns: coordinates:
+        The position and size coordinates of the barcode (x,y, w, h)/
+    :rtype: coordinates: tuple
+    :returns: image:
+        The image.
+    :returns: mask_image
+        The mask of the image.
+    :rtype: tuple
+
     """
 
     # Make sure the image is an array with three "channels"
@@ -319,7 +376,16 @@ def detect(image: np.ndarray, expected_area=22000, expected_aspect_ratio=7.5, ba
 
 
 def rotate(image, angle):
-    """Rotate the image by given angle in degrees."""
+    """Rotate the image by given angle in degrees.
+
+    :param image:
+        The image to be rotated.
+    :param angle:
+        Rotation angle in degrees for the image.
+
+    :returns: image:
+        Rotated image.
+    """
 
     if angle == 0:
         return image
@@ -348,7 +414,17 @@ def rotate(image, angle):
 
 
 def calc_area_and_approx_aspect_ratio(contour):
-    """Calculate area and approximate aspect ratio of a contour."""
+    """Calculate area and approximate aspect ratio of a contour.
+
+    :param contour:
+        cv2.Contour.
+
+    :returns: area:
+        Area of the contour.
+    :returns: aspect_ratio:
+        Aspect ratio of the contour.
+
+    """
 
     # Calculate area
     area = cv2.contourArea(contour)
@@ -371,6 +447,12 @@ def rotate_90_if_needed(image):
     """Try to estimate the orientation of the image, and rotate if needed.
 
     @TODO: This is not very robust so far.
+
+    :param image:
+        Image to be rotated by 90 degrees.
+
+    :returns: image:
+        By 90 degrees rotated image.
     """
 
     # We start with a copy of the B/W image
@@ -420,6 +502,17 @@ def read_FID_from_barcode_image(image):
     """
     Read the FID string from the barcode image using pytesseract and
     decode the barcode itself using pyzbar.
+
+    :param image:
+        Image to read FID from barcode.
+
+    :returns: fid_tesseract:
+        FID detected by tesseract (OCR).
+    :returns: fid_pyzbar:
+        FID detected by pyzbar (barcode).
+
+    :returns: score:
+        Score how well FID detection worked. For more details about the score read the manual.
     """
 
     fid_tesseract = ""
@@ -455,7 +548,16 @@ def read_FID_from_barcode_image(image):
 
 
 def get_fid_from_barcode_data(barcode_data, barcode_type="CODE128"):
-    """Parse the output of pyzbar and retrieve the FID."""
+    """Parse the output of pyzbar and retrieve the FID.
+
+    :param barcode_data:
+        Barcode data (zbar).
+    :param barcode_type:
+        Type of barcode (CODE39, CODE128, QRCODE).
+
+    :returns: barcode:
+        Decoded barcode as utf8.
+    """
     for barcode in barcode_data:
         if barcode.type == barcode_type:
             return barcode.data.decode("utf-8")
@@ -463,7 +565,14 @@ def get_fid_from_barcode_data(barcode_data, barcode_type="CODE128"):
 
 
 def get_fid_from_box_image_using_ocr(box_img):
-    """Use pytesseract to retrieve FID from the strip box image."""
+    """Use pytesseract to retrieve FID from the strip box image.
+
+    :param box_img:
+        Image of the QR code box.
+
+    :returns: fid_tesseract:
+        FID detected by tesseract from image using OCR.
+    """
 
     # Use pytesseract to extract the FID
     text = pytesseract.image_to_string(box_img, lang='eng')
@@ -484,6 +593,23 @@ def get_fid_from_box_image_using_ocr(box_img):
 
 
 def try_extracting_barcode_from_box_with_rotations(box, scaling=(1.0, 0.5, 0.25), verbose=False, log_list=None):
+    """  Try extracting barcode from QR code box while scaling it for different orientations [0, 90, 180, -90].
+
+    :param box:
+        QR code box
+    :param scaling:
+        Scaling factors.
+    :param verbose:
+        Display additional logging information to the console.
+    :param log_list:
+        Log list.
+
+    :returns: fid:
+        FID number
+
+    :returns: log_list
+        Appended Log list with current log information.
+    """
 
     # Switch to RGB
     rgb = cv2.cvtColor(box, cv2.COLOR_BGR2RGB)
@@ -518,6 +644,27 @@ def try_extracting_barcode_from_box_with_rotations(box, scaling=(1.0, 0.5, 0.25)
 
 
 def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, log_list: list=None):
+    """ Try extracting barcode from QR code box for a list of angles in the range of `angle_range`.
+
+    :param image:
+        Input image
+
+    :param angle_range:
+        Range of angles to rotate input images in degrees.
+    :type angle_range: int
+
+    :param verbose:
+        Display additional logging information to the console.
+    :param log_list:
+        Log list.
+
+    :returns: fid:
+        Extracted FID
+    :returns: angle:
+        Rotation angle that led to FID detection
+    :returns: log_list:
+        Appended log list.
+    """
 
     # Prepare the list of angles to try (build a generator)
     angles = (x // 2 if x % 2 == 1 else -x // 2 for x in range(1, 2 * (angle_range + 1)))
@@ -561,7 +708,27 @@ def try_extracting_barcode_with_rotation(image, angle_range=15, verbose=True, lo
 
 
 def find_strip_box_from_barcode_data_fh(image, barcode_data, qr_code_border=30, qc=False):
-    """Extract the box around the strip using the QR barcode data."""
+    """Extract the box around the strip using the QR barcode data.
+
+    :param image:
+        Strip image.
+    :param barcode_data:
+        Barcode data.
+    :param qr_code_border:
+        Border around QR codes.
+    :param qc:
+        Bool, if true quality control image will be saved.
+
+    :returns: box:
+        Strip box.
+    :returns: qr_code_size:
+        The size of the QR codes (qr_code_width, qr_code_height).
+    :returns: qc_image:
+        Quality control image.
+    :returns: box_rect:
+        Rectangle of the QR box.
+
+    """
 
     if qc:
         qc_image = image.copy()
@@ -678,7 +845,30 @@ def find_strip_box_from_barcode_data_fh(image, barcode_data, qr_code_border=30, 
 
 def find_strip_box_from_barcode_data(image, barcode_data, qr_code_border=30, qr_code_spacer=40, barcode_border=80,
                                      qc=False):
-    """Extract the box around the strip using the QR barcode data."""
+    """Extract the box around the strip using the QR barcode data.
+
+    :param image:
+        Input image.
+    :param barcode_data:
+        Barcode data
+    :param qr_code_border:
+        Border around QR code on image.
+    :param qr_code_spacer:
+        Spacer around QR code.
+    :param barcode_border:
+        Border around barcode such as CODE128.
+    :param qc:
+        Bool, if true quality control image will be saved.
+
+    :returns: box
+        QR code box around strip
+    :returns: x_barcode
+        Return the (x) coordinate of the left edge of the barcode rectangle.
+    :returns: qr_code_size:
+        The size of the QR codes (qr_code_width, qr_code_height).
+    :returns: qc_image
+        Quality control image.
+    """
 
     if qc:
         qc_image = image.copy()
@@ -805,6 +995,23 @@ def try_extracting_barcode_with_linear_stretch(image, lower_bound_range=(25,), u
     # codes. We might try other options such as Adaptive Hist, CLAHE, etc
     # NOTE2: Orientation might play a role - however minor. Prefered orientation for the barcode detector seams
     # horizontal but vertical works too
+    """ Try to extract the barcodes from the image by rescaling the intensity of the image with a linear stretch.
+
+    :param image:
+        Input image
+
+    :param lower_bound_range:
+        Lower bound range.
+    :param lower_bound_range: tuple
+
+    :param upper_bound_range:
+        Upper bound range.
+    :param upper_bound_range: tuple
+
+    :returns: ""
+    :returns: gray
+
+    """
 
     gray = BGR2Gray(image.copy())
 
@@ -828,7 +1035,14 @@ def try_extracting_barcode_with_linear_stretch(image, lower_bound_range=(25,), u
 
 
 def try_getting_fid_from_code128_barcode(barcode_data):
-    """Try finding a CODE 128 barcode in barcode data that should contain the patient FID."""
+    """Try finding a CODE 128 barcode in barcode data that should contain the patient FID.
+
+    :param barcode_data:
+        Barcode data
+
+    :returns: barcode:
+        Decoded CODE128 barcode.
+    """
 
     for barcode in barcode_data:
         if barcode.symbol == "CODE128":
@@ -837,6 +1051,15 @@ def try_getting_fid_from_code128_barcode(barcode_data):
 
 
 def try_get_fid_from_rgb(image):
+    """ Extract FID from rgb image.
+
+    :param image:
+        RGB image with FID.
+
+    :returns: fid:
+        Detected FID as string.
+
+    """
     barcode_data = decode(image, SymbolTypes.TYPES.value)
 
     # return "" if no barcode or of wrong type was detected
@@ -855,6 +1078,48 @@ def try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
         upper_bound_range=(100, 98, 95, 92, 89),
         scaling=(1.0, )
     ):
+    """ Try extracting the fid and all barcodes from the image by rescaling the intensity of the image with a
+    linear stretch.
+
+    :param image:
+        Input image
+
+    :param lower_bound_range:
+        Lower bound range.
+    :param lower_bound_range: tuple
+
+    :param upper_bound_range:
+        Upper bound range.
+    :param upper_bound_range: tuple
+
+    :param scaling:
+        Scaling factor
+    :param scaling: tuple
+
+    :returns: barcodes:
+        Barcode object
+    :returns: fid:
+        FID number
+    :returns: manufacturer:
+        Manufacturer name.
+    :returns: plate:
+        Plate info.
+    :returns: well:
+        Well info.
+    :returns: user:
+        Additional user data.
+    :returns: best_lb:
+        Best lower bound.
+    :returns: best_ub:
+        Best upper bound
+    :returns: best_score:
+        Best score.
+    :returns: best_scaling_factor:
+        Best scaling factor
+    :returns: fid_128:
+        FID 128 code.
+
+    """
 
     if image.ndim == 3:
         gray = BGR2Gray(image.copy())
@@ -1014,6 +1279,25 @@ def try_extracting_all_barcodes_with_linear_stretch(
         lower_bound_range=(0, 5, 15, 25, 35),
         upper_bound_range=(100, 98, 95, 92, 89)
 ):
+    """ Try extracting the fid and all barcodes from the image by rescaling the intensity of the image with a
+    linear stretch.
+
+    :param image:
+        Input image.
+
+    :param lower_bound_range:
+        Lower bound range.
+    :param lower_bound_range: tuple
+
+    :param upper_bound_range:
+        Upper bound range.
+    :param upper_bound_range: tuple
+
+    :returns: best_barcode_data
+    :returns: best_lb
+    :returns: best_ub
+    :returns: best_score
+    """
     # NOTE:  CONTRAST is KEY. Rescaling intensity a bit helps not only in detecting the barcode but also QR
     # codes. We might try other options such as Adaptive Hist, CLAHE, etc
     # NOTE2: Orientation might play a role - however minor. Preferred orientation for the barcode detector sems
@@ -1082,7 +1366,22 @@ def try_extracting_all_barcodes_with_linear_stretch(
 def rotate_if_needed_fh(image, barcode_data, image_log, verbose=True):
     """Rotate the image if the orientation is not the expected one.
 
-    Return tuple (image_was_rotated: boolean, image)
+    :param image:
+        Input image.
+    :param barcode_data:
+        Barcode data.
+    :param image_log:
+        Image log list.
+    :param verbose:
+        Bool, if true displays additional information to the console.
+    :type verbose: bool
+
+    :returns: image_was_rotated:
+        Bool, true if image was rotated.
+    :rtype: image_was_rotated: bool
+    :returns: image:
+        Rotated image.
+    :rtype: tuple
     """
 
     positions = {
@@ -1281,7 +1580,24 @@ def rotate_if_needed_fh(image, barcode_data, image_log, verbose=True):
 def rotate_if_needed(image, barcode_data, image_log, verbose=True):
     """Rotate the image if the orientation is not the expected one.
 
-    Return tuple (image_was_rotated: boolean, image)
+    :param image:
+        Input image.
+    :param barcode_data:
+        Barcode data.
+    :param image_log:
+        Image log list.
+    :param verbose:
+        Bool, if true displays additional information to the console.
+    :type verbose: bool
+
+    :returns: image_was_rotated:
+        Bool, true if image was rotated.
+    :rtype: image_was_rotated: bool
+    :returns: image:
+        Rotated image.
+    :returns: image_log:
+        Log for this image
+    :rtype: tuple
     """
 
     # Center axes of the image
@@ -1413,6 +1729,19 @@ def rotate_if_needed(image, barcode_data, image_log, verbose=True):
 
 
 def pick_FID_from_candidates(fid_pyzbar, fid_tesseract):
+    """ Selection of FID from candidates depending on if candidates contain a FID.
+
+    :param fid_pyzbar:
+        FID string determined with pyzbar.
+    :param fid_tesseract:
+        FID string determined with tesseract.
+
+    :returns: fid
+        FID number
+    :returns: score
+        Score for the candidate determination.
+
+    """
     if fid_pyzbar == "" and fid_tesseract == "":
         return "", 0
 
@@ -1438,7 +1767,21 @@ def pick_FID_from_candidates(fid_pyzbar, fid_tesseract):
 
 
 def mask_strip(strip_gray, x_barcode, qr_code_extents):
-    """Hide the barcode on the strip image."""
+    """Hide the barcode on the strip image.
+
+    :param strip_gray:
+        Image of the strip (POCT).
+    :param x_barcode:
+        X coordinate of the barcode on the strip.
+    :param qr_code_extents:
+        QR code extents on the strip.
+
+    :returns: strip_gray_masked
+        Strip with QR code masked away.
+    :returns: background_value
+        Background value used for strip masking.
+
+    """
     strip_gray_masked = strip_gray.copy()
     rel_x_barcode = x_barcode - qr_code_extents[1]
     background_value = np.median(strip_gray_masked[:, rel_x_barcode - 5:rel_x_barcode])
@@ -1449,11 +1792,19 @@ def mask_strip(strip_gray, x_barcode, qr_code_extents):
 def extract_strip_from_box(box, qr_code_width, qr_code_height, qr_code_spacer=40, slack=0):
     """Extract the strip from the strip box.
 
-    qr_code_width: width ot the QR code
-    qr_code_height: height ot the QR code
-    qr_code_spacer: horizontal and vertical distance between the internal edge of the QR codes
-                    and the beginning of the strip.
-    slack: some buffer (subtracted from qr_code_spacer) to avoid cropping into the strip
+    :param box:
+        Image of the QR code box.
+    :param qr_code_width:
+        Width ot the QR code
+    :param qr_code_height:
+        Height ot the QR code
+    :param qr_code_spacer:
+        Horizontal and vertical distance between the internal edge of the QR codes and the beginning of the strip.
+    :param slack:
+        Some buffer (subtracted from qr_code_spacer) to avoid cropping into the strip
+
+    :returns: strip
+        Returns the extracted POCT strip as image matrix.
     """
     vertical_offset = qr_code_height + qr_code_spacer - slack
     horizontal_offset = qr_code_width + qr_code_spacer - slack
@@ -1469,6 +1820,13 @@ def get_fid_numeric_value_fh(fid):
 
     A FID could be in the form 'F0123456'. We want to preserve
     the leading 0 after we removed the 'F'.
+
+    :param fid:
+        FID number
+    :type fid: str
+
+    :returns: fid:
+
     """
     if fid is None:
         return ""
@@ -1476,7 +1834,16 @@ def get_fid_numeric_value_fh(fid):
 
 
 def get_fid_numeric_value(fid):
-    """Return the numeric value of the FID."""
+    """Return the numeric value of the FID.
+
+    :param fid:
+        FID number
+    :type fid: str
+
+    :returns: filtered_fid:
+        FID number as numeric
+
+    """
     if fid is None:
         return -1
     filtered_fid = ''.join(filter(lambda i: i.isdigit(), fid))
@@ -1486,6 +1853,18 @@ def get_fid_numeric_value(fid):
 
 
 def get_box_rotation_angle(pt1, pt2, pt3):
+    """ Determine the the QR code box rotation angle
+
+    :param pt1:
+        Coordinate corner 1
+    :param pt2:
+        Coordinate corner 2
+    :param pt3:
+        Coordinate corner 3
+
+    :returns: rot_angle
+        Rotation angle in degree.
+    """
     v1_angle = np.arctan2((pt2[1] - pt1[1]), (pt2[0] - pt1[0]))
     v2_angle = np.arctan2((pt3[1] - pt1[1]), (pt3[0] - pt1[0]))
     rot_angle = math.degrees(v2_angle - v1_angle)
@@ -1493,6 +1872,19 @@ def get_box_rotation_angle(pt1, pt2, pt3):
 
 
 def align_box_with_image_border_fh(barcode_data, image):
+    """ Method to align QR code box with image border of the full image (old pipeline).
+
+    :param barcode_data:
+        QR code data
+    :param image:
+        Image
+
+    :returns: image_rotated:
+        Rotated image
+    :returns: angle
+        Rotation angle in degrees.
+
+    """
     qr_centroids = {}
     for code in barcode_data:
         qr_name = code.data
@@ -1529,6 +1921,18 @@ def align_box_with_image_border_fh(barcode_data, image):
 
 
 def align_box_with_image_border(barcode_data, image):
+    """ Method to align QR code box with image border of the full image.
+
+    :param barcode_data:
+        QR code data
+    :param image:
+        Image
+
+    :returns: image_rotated:
+        Rotated image
+    :returns: angle
+        Rotation angle in degrees.
+    """
     qr_centroids = {}
     for code in barcode_data:
         qr_name = code.data.decode()
