@@ -20,7 +20,7 @@ from pypocquant.lib.pipeline import run_pipeline
 from pypocquant.lib.settings import load_settings
 
 
-class TestIO(TestCase):
+class TestAnalysis(TestCase):
 
     def test_bands_assignments(self):
 
@@ -36,7 +36,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 2: igm only
@@ -51,7 +50,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 3: ctl only
@@ -66,7 +64,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 3: all assigned
@@ -81,7 +78,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 4: only two bands, assigned
@@ -96,7 +92,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 5: three bands, out of order, assigned
@@ -113,7 +108,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 6: bar 2 distance from the expected position is out of tolerance
@@ -128,7 +122,6 @@ class TestIO(TestCase):
             tolerance=0.05
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 7: both bar 2 and 3 are close to ctl, but bar 2 is closer
@@ -144,10 +137,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
-        self.assertEqual(expected_bars, bars)
-
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 8: both bar 2 and 3 are close to ctl, but bar 3 is closer
@@ -163,7 +152,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 9: all bars are above distance tolerance
@@ -178,7 +166,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
         # Test 10: all bars have large deviations (still within tolerance)
@@ -193,7 +180,6 @@ class TestIO(TestCase):
             tolerance=0.1
         )
 
-        print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
 
     def test_full_pipeline(self):
