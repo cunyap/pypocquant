@@ -27,9 +27,9 @@ class TestUtils(TestCase):
         iso_date, iso_time = get_iso_date_from_image(full_filename)
 
         print(f"\nExpected result: Iso date: 2020-06-21; Test result: {iso_date}")
-        self.assertEquals('2020-06-21', iso_date)
+        self.assertEqual('2020-06-21', iso_date)
         print(f"\nExpected result: Iso time: 12-14-03; Test result: {iso_time}")
-        self.assertEquals('12-14-03', iso_time)
+        self.assertEqual('12-14-03', iso_time)
 
     def testGetExifDetails(self):
         file_path = Path(__file__).parent.absolute().parent

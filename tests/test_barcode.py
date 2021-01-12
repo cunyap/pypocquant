@@ -30,19 +30,19 @@ class TestBarcode(TestCase):
             )
 
         print(f"\nExpected result: FID: H01601828610122; Test result: {fid}")
-        self.assertEquals('H01601828610122', fid)
+        self.assertEqual('H01601828610122', fid)
         print(f"\nExpected result: Manufacturer: 'SUREBIOTECH'; Test result: {manufacturer}")
-        self.assertEquals('SUREBIOTECH', manufacturer)
+        self.assertEqual('SUREBIOTECH', manufacturer)
         print(f"\nExpected result: Plate: 04; Test result: {plate}")
-        self.assertEquals('04', plate)
+        self.assertEqual('04', plate)
         print(f"\nExpected result: Well: A 01; Test result: {well}")
-        self.assertEquals('A 01', well)
+        self.assertEqual('A 01', well)
         print(f"\nExpected result: User: CUNYA; Test result: {user}")
-        self.assertEquals('CUNYA', user)
+        self.assertEqual('CUNYA', user)
         print(f"\nExpected result: Score: 6; Test result: {best_score}")
-        self.assertEquals(6, best_score)
+        self.assertEqual(6, best_score)
         print(f"\nExpected result: FID_128: ''; Test result: {fid_128}")
-        self.assertEquals('', fid_128)
+        self.assertEqual('', fid_128)
 
     def testTryExtractingFidAndAllBarcodesWithLinearStretchBarcodeSampleMetadata(self):
         file_path = Path(__file__).parent.absolute().parent
@@ -59,9 +59,9 @@ class TestBarcode(TestCase):
         symbol = code1.symbol
         print(f"\nExpected result: Sample metadata: H01601828610122-SUREBIOTECH-Plate 04-Well A 01-CUNYA; Test result:"
               f"{data}")
-        self.assertEquals('H01601828610122-SUREBIOTECH-Plate 04-Well A 01-CUNYA', data)
+        self.assertEqual('H01601828610122-SUREBIOTECH-Plate 04-Well A 01-CUNYA', data)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol}")
-        self.assertEquals('QRCODE', symbol)
+        self.assertEqual('QRCODE', symbol)
 
     def testTryExtractingFidAndAllBarcodesWithLinearStretchBarcodePositionIdentification(self):
         file_path = Path(__file__).parent.absolute().parent
@@ -77,49 +77,49 @@ class TestBarcode(TestCase):
         data1 = code1.data
         symbol1 = code1.symbol
         print(f"\nExpected result: Sample metadata: TR; Test result:" f"{data1}")
-        self.assertEquals('TR', data1)
+        self.assertEqual('TR', data1)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol1}")
-        self.assertEquals('QRCODE', symbol1)
+        self.assertEqual('QRCODE', symbol1)
 
         code2 = barcode_data[2]
         data2 = code2.data
         symbol2 = code2.symbol
         print(f"\nExpected result: Sample metadata: TL; Test result:" f"{data2}")
-        self.assertEquals('TL', data2)
+        self.assertEqual('TL', data2)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol2}")
-        self.assertEquals('QRCODE', symbol2)
+        self.assertEqual('QRCODE', symbol2)
 
         code3 = barcode_data[3]
         data3 = code3.data
         symbol3 = code3.symbol
         print(f"\nExpected result: Sample metadata: BR; Test result:" f"{data3}")
-        self.assertEquals('BR', data3)
+        self.assertEqual('BR', data3)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol3}")
-        self.assertEquals('QRCODE', symbol3)
+        self.assertEqual('QRCODE', symbol3)
 
         code4 = barcode_data[4]
         data4 = code4.data
         symbol4 = code4.symbol
         print(f"\nExpected result: Sample metadata: BL; Test result:" f"{data4}")
-        self.assertEquals('BL', data4)
+        self.assertEqual('BL', data4)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol4}")
-        self.assertEquals('QRCODE', symbol4)
+        self.assertEqual('QRCODE', symbol4)
 
         code5 = barcode_data[5]
         data5 = code5.data
         symbol5 = code5.symbol
         print(f"\nExpected result: Sample metadata: L_G; Test result:" f"{data5}")
-        self.assertEquals('L_G', data5)
+        self.assertEqual('L_G', data5)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol5}")
-        self.assertEquals('QRCODE', symbol5)
+        self.assertEqual('QRCODE', symbol5)
 
         code6 = barcode_data[6]
         data6 = code6.data
         symbol6 = code6.symbol
         print(f"\nExpected result: Sample metadata: TL_P; Test result:" f"{data6}")
-        self.assertEquals('TL_P', data6)
+        self.assertEqual('TL_P', data6)
         print(f"\nExpected result: Code type: QRCODE; Test result: {symbol6}")
-        self.assertEquals('QRCODE', symbol6)
+        self.assertEqual('QRCODE', symbol6)
 
 
 if __name__ == "__main__":

@@ -30,9 +30,9 @@ class TestSettings(TestCase):
         test_settings = default_settings()
 
         print(f"\nExpected result: dict; Test result: {type(test_settings)}")
-        self.assertEquals(type(test_settings), dict)
+        self.assertEqual(type(test_settings), dict)
         print(f"\nExpected result: {expected_settings}; Test result: {test_settings}")
-        self.assertEquals(expected_settings, test_settings)
+        self.assertEqual(expected_settings, test_settings)
 
     def testSaveSettings(self):
         path = Path(__file__).parent.parent

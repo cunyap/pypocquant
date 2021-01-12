@@ -28,9 +28,9 @@ class TestTools(TestCase):
                               strip_text_to_search="", strip_text_on_right=True)
 
         print(f"\nExpected result: numpy.ndarray; Test result: {type(strip_for_analysis)}")
-        self.assertEquals(type(strip_for_analysis), np.ndarray)
+        self.assertEqual(type(strip_for_analysis), np.ndarray)
         print(f"\nExpected result: Strip shape: (300, 1056, 3); Test result: {strip_for_analysis.shape}")
-        self.assertEquals((300, 1056, 3),  strip_for_analysis.shape)
+        self.assertEqual((300, 1056, 3),  strip_for_analysis.shape)
 
     def testExtractStripTryCorrectOrientation(self):
         file_path = Path(__file__).parent.absolute().parent
@@ -42,13 +42,13 @@ class TestTools(TestCase):
                               strip_text_to_search="", strip_text_on_right=True)
 
         print(f"\nExpected result: numpy.ndarray; Test result: {type(strip_for_analysis)}")
-        self.assertEquals(type(strip_for_analysis), np.ndarray)
+        self.assertEqual(type(strip_for_analysis), np.ndarray)
         print(f"\nExpected result: Strip shape: (300, 1056, 3); Test result: {strip_for_analysis.shape}")
-        self.assertEquals((300, 1056, 3),  strip_for_analysis.shape)
+        self.assertEqual((300, 1056, 3),  strip_for_analysis.shape)
         print(f"\nExpected result: Left rect: [95, 72, 275, 156]; Test result: {left_rect}")
-        self.assertEquals([95, 72, 275, 156], left_rect)
+        self.assertEqual([95, 72, 275, 156], left_rect)
         print(f"\nExpected result: Right rect: [686, 72, 275, 156]; Test result: {right_rect}")
-        self.assertEquals([686, 72, 275, 156], right_rect)
+        self.assertEqual([686, 72, 275, 156], right_rect)
 
 
 if __name__ == "__main__":

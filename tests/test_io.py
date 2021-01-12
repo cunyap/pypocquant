@@ -23,7 +23,7 @@ class TestIO(TestCase):
         image = load_and_process_image(full_filename, raw_auto_stretch=False, raw_auto_wb=False, to_rgb=False)
 
         print(f"\nExpected result: numpy.ndarray; Test result: {type(image)}")
-        self.assertEquals(type(image), np.ndarray)
+        self.assertEqual(type(image), np.ndarray)
 
     def testLoadAndProcessImageShape(self):
         file_path = Path(__file__).parent.absolute().parent
