@@ -139,6 +139,10 @@ if __name__ == '__main__':
     if 'max_workers' in settings:
         del settings['max_workers']
 
+    # If the 'sensor_bands_number' parameter is in the settings file, drop it
+    if 'sensor_bands_number' in settings:
+        del settings['sensor_bands_number']
+
     # BACKWARD COMPATIBILITY
     # If the 'control_band_index' parameter is *not* in the settings file, add it
     if 'control_band_index' not in settings:
