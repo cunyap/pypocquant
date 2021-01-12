@@ -39,7 +39,8 @@ setup(
         'scikit-image',
         'pyqt==5.9.2',
         'nbconvert',
-        'jupytext'
+        'jupytext',
+        'pytest'
     ],
 )
 
