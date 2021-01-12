@@ -89,20 +89,6 @@ def get_project_root() -> Path:
     return project_root
 
 
-def get_templates_folder() -> Path:
-    """Returns templates folder.
-
-    :returns: templates_folder
-    :rtype: Path
-    """
-    try:
-        # Running from a pyinstaller executable
-        templates_folder = Path(sys._MEIPASS) / "templates"
-    except:
-        templates_folder = get_project_root() / "pyPOCQuant" / "templates"
-    return templates_folder
-
-
 def get_data_folder() -> Path:
     """Returns the value of the environment variable DATA_FOLDER or,
     if not found, the value if `get_project_root()`.
