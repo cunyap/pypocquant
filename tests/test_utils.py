@@ -37,7 +37,7 @@ class TestUtils(TestCase):
     def testImageFormatConverter(self):
 
         file_path = Path(__file__).parent.absolute().parent
-        image_format_converter(Path(file_path / 'tests' / 'test_raw'), filename='DSC_0115.nef',
+        image_format_converter(Path(file_path / 'tests' / 'test_raw'), filename='DSC_0115.NEF',
                                output_dir=Path(file_path / 'tests' / 'test_raw'), image_format='jpeg')
 
         full_filename = str(Path(file_path / 'tests' / 'test_raw' / 'DSC_0115.jpeg'))
@@ -77,14 +77,6 @@ class TestUtils(TestCase):
 
         orientation = get_orientation_from_image(full_filename)
         self.assertEqual('Horizontal (normal)', orientation)
-
-    def testIsOnPath(self):
-
-        ret = is_on_path('tesseract')
-        self.assertEqual(False, ret)
-
-    def testSetTesseract(self):
-        print(pytesseract.pytesseract.tesseract_cmd)
 
 
 if __name__ == "__main__":
