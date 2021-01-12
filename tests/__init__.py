@@ -12,6 +12,7 @@
 
 from .test_analysis import TestAnalysis
 from .test_barcode import TestBarcode
+from .test_consts import TestConsts
 # from .test_fid import TestFid
 from .test_io import TestIO
 # from .test_processing import TestProcessing
