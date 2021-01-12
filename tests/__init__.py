@@ -10,3 +10,10 @@
 #     * Aaron Ponti - initial API and implementation
 #  *********************************************************************************
 
+from .test_analysis import TestAnalysis
+from .test_barcode import TestBarcode
+# from .test_fid import TestFid
+from .test_io import TestIO
+# from .test_processing import TestProcessing
+# from .test_settings import TestSettings
+from .test_tools import TestTools
