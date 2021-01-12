@@ -97,6 +97,12 @@ def identify_bars_alt(
         metric='euclidean'
     )
 
+    # Make all distances above tolerance very large to prevent
+    # suboptimal linear assignments in pathologic cases where
+    # two candidate bands are very close to each other and an
+    # expected position.
+    dists[dists > tolerance] = profile_length
+
     # Calculate linear assignment
     row, col = linear_sum_assignment(dists)
 
