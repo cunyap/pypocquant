@@ -89,7 +89,12 @@ Step 4:
 
 
 * Follow the installer guide lines to install __pyPOCQuant__
-* Install tesseract for your operating system by following these steps: https://tesseract-ocr.github.io/tessdoc/Home.html. Note: in Linux you need also `libzbar`. In Ubuntu, you can install both with `sudo apt install libzbar0 tesseract-ocr`.
+* Install third-party dependences for your operating system.
+  * Windows: `tesseract`: https://tesseract-ocr.github.io/tessdoc/Home.html. 
+  * Linux: `zbar` and `tesseract`. 
+    * In Ubuntu, you can install them with `sudo apt install libzbar0 tesseract-ocr`.
+  * macOS: `cairo`, `zbar` and `tesseract`. 
+    * Using homebrew: `brew install cairo zbar tesseract`
 
 <img src="ui_images/ui_full_empty.JPG"/>
 

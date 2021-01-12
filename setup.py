@@ -24,9 +24,6 @@ setup(
     install_requires=[
         'opencv-python==3.4.2.16',
         'opencv-contrib-python==3.4.2.16',
-        # 'opencv-python==4.1.1.26',
-        # 'opencv-contrib-python==4.1.1.26',
-        # 'opencv-contrib-python-nonfree==4.1.1.1',
         'exifread',
         'imutils',
         'matplotlib',
