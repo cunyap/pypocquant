@@ -18,3 +18,4 @@ from .test_io import TestIO
 # from .test_processing import TestProcessing
 # from .test_settings import TestSettings
 from .test_tools import TestTools
+from .test_utils import TestUtils
