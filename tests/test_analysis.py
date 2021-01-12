@@ -9,11 +9,15 @@
 #  *     Andreas P. Cuny - initial API and implementation
 #  *     Aaron Ponti - initial API and implementation
 #  *******************************************************************************/
+
+import pandas as pd
+from pathlib import Path
+import shutil
 from unittest import TestCase, main
 
 from pypocquant.lib.analysis import identify_bars_alt
-from pypocquant.lib.io import load_and_process_image
-import numpy as np
+from pypocquant.lib.pipeline import run_pipeline
+from pypocquant.lib.settings import load_settings
 
 
 class TestIO(TestCase):
@@ -178,7 +182,7 @@ class TestIO(TestCase):
         self.assertEqual(expected_bars, bars)
 
         # Test 10: all bars have large deviations (still within tolerance)
-        peak_positions = [80, 100, 160]
+        peak_positions = [80, 100, 170]
         expected_bars = {"igg": 0, "igm": 1, "ctl": 2}
 
         bars = identify_bars_alt(
@@ -191,6 +195,76 @@ class TestIO(TestCase):
 
         print(f"\nExpected result: {expected_bars}; Test result: {bars}")
         self.assertEqual(expected_bars, bars)
+
+    def test_full_pipeline(self):
+        """Test full pipeline on a test image."""
+
+        # Test pipeline path
+        input_folder_path = Path(__file__).parent / "test_pipeline"
+
+        # Settings file
+        settings_file = input_folder_path / "test_pipeline_settings.conf"
+
+        # Load settings file
+        settings = load_settings(settings_file)
+
+        # If the "pipeline" subfolder in input_folder exists,
+        # delete it recursively
+        results_folder_path = input_folder_path / "pipeline"
+        if results_folder_path.is_dir():
+            shutil.rmtree(results_folder_path)
+        results_folder_path.mkdir(parents=False, exist_ok=False)
+
+        # Start pipeline
+        run_pipeline(
+            input_folder_path,
+            results_folder_path,
+            **settings,
+            max_workers=1
+        )
+
+        # Now load the results
+        results = pd.read_csv(
+            str(results_folder_path / "quantification_data.csv")
+        )
+
+        # Expected results
+        expected_fid = 'F5922985'
+        expected_iso_date = '2020-06-21'
+        expected_manufacturer = 'SUREBIOTECH'
+        expected_plate = 6
+        expected_well = 'F 07'
+        expected_issue = 0
+        expected_igm = 1
+        expected_igm_abs = 761.070957692734
+        expected_igm_ratio = 0.720671272145915
+        expected_igg = 1
+        expected_igg_abs = 1748.84250473075
+        expected_igg_ratio = 1.6560092589632
+        expected_ctl = 1
+        expected_ctl_abs = 1056.05840985797
+        expected_ctl_ratio = 1
+
+        # Compare results
+        self.assertEqual(expected_fid, results['fid'].item())
+        self.assertEqual(expected_iso_date, results['iso_date'].item())
+        self.assertEqual(expected_manufacturer, results['manufacturer'].item())
+        self.assertEqual(expected_plate, results['plate'].item())
+        self.assertEqual(expected_well, results['well'].item())
+        self.assertEqual(expected_issue, results['issue'].item())
+        self.assertEqual(expected_igm, results['igm'].item())
+        self.assertAlmostEqual(expected_igm_abs, results['igm_abs'].item(), places=6)
+        self.assertAlmostEqual(expected_igm_ratio, results['igm_ratio'].item(), places=6)
+        self.assertEqual(expected_igg, results['igm'].item())
+        self.assertAlmostEqual(expected_igg_abs, results['igg_abs'].item(), places=6)
+        self.assertAlmostEqual(expected_igg_ratio, results['igg_ratio'].item(), places=6)
+        self.assertEqual(expected_ctl, results['ctl'].item())
+        self.assertAlmostEqual(expected_ctl_abs, results['ctl_abs'].item(), places=6)
+        self.assertAlmostEqual(expected_ctl_ratio, results['ctl_ratio'].item(), places=6)
+
+        # Delete the "pipeline" subfolder
+        if results_folder_path.is_dir():
+            shutil.rmtree(results_folder_path)
 
 
 if __name__ == "__main__":
