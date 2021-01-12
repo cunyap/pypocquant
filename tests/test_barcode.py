@@ -1,23 +1,25 @@
-#  /********************************************************************************
-#  * Copyright © 2020-2021, ETH Zurich, D-BSSE, Andreas P. Cuny & Aaron Ponti
-#  * All rights reserved. This program and the accompanying materials
-#  * are made available under the terms of the GNU Public License v3.0
-#  * which accompanies this distribution, and is available at
-#  * http://www.gnu.org/licenses/gpl
-#  *
-#  * Contributors:
-#  *     Andreas P. Cuny - initial API and implementation
-#  *     Aaron Ponti - initial API and implementation
-#  *******************************************************************************/
+#  ********************************************************************************
+#   Copyright © 2020-2021, ETH Zurich, D-BSSE, Andreas P. Cuny & Aaron Ponti
+#   All rights reserved. This program and the accompanying materials
+#   are made available under the terms of the GNU Public License v3.0
+#   which accompanies this distribution, and is available at
+#   http://www.gnu.org/licenses/gpl
+#
+#   Contributors:
+#     * Andreas P. Cuny - initial API and implementation
+#     * Aaron Ponti - initial API and implementation
+#  *********************************************************************************
 from unittest import TestCase, main
 from pypocquant.lib.barcode import try_extracting_fid_and_all_barcodes_with_linear_stretch_fh
 from pypocquant.lib.io import load_and_process_image
+from pathlib import Path
 
 
 class TestBarcode(TestCase):
 
     def testTryExtractingFidAndAllBarcodesWithLinearStretch(self):
-        full_filename = '../examples/images/IMG_9067.JPG'
+        file_path = Path(__file__).parent.absolute().parent
+        full_filename = str(Path(file_path / 'examples' / 'images' / 'IMG_9067.JPG'))
         image = load_and_process_image(full_filename, raw_auto_stretch=False, raw_auto_wb=False, to_rgb=True)
         barcode_data, fid, manufacturer, plate, well, user, best_lb, best_ub, best_score, best_scaling_factor, fid_128 = \
             try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
@@ -43,7 +45,8 @@ class TestBarcode(TestCase):
         self.assertEquals('', fid_128)
 
     def testTryExtractingFidAndAllBarcodesWithLinearStretchBarcodeSampleMetadata(self):
-        full_filename = '../examples/images/IMG_9067.JPG'
+        file_path = Path(__file__).parent.absolute().parent
+        full_filename = str(Path(file_path / 'examples' / 'images' / 'IMG_9067.JPG'))
         image = load_and_process_image(full_filename, raw_auto_stretch=False, raw_auto_wb=False, to_rgb=True)
         barcode_data, _, _, plate, _, _, _, _, _, _, _ = try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
@@ -61,7 +64,8 @@ class TestBarcode(TestCase):
         self.assertEquals('QRCODE', symbol)
 
     def testTryExtractingFidAndAllBarcodesWithLinearStretchBarcodePositionIdentification(self):
-        full_filename = '../examples/images/IMG_9067.JPG'
+        file_path = Path(__file__).parent.absolute().parent
+        full_filename = str(Path(file_path / 'examples' / 'images' / 'IMG_9067.JPG'))
         image = load_and_process_image(full_filename, raw_auto_stretch=False, raw_auto_wb=False, to_rgb=True)
         barcode_data, _, _, plate, _, _, _, _, _, _, _ = try_extracting_fid_and_all_barcodes_with_linear_stretch_fh(
                 image,
@@ -119,4 +123,4 @@ class TestBarcode(TestCase):
 
 
 if __name__ == "__main__":
-     main()
+    main()

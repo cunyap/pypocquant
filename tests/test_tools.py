@@ -1,24 +1,26 @@
-#  /********************************************************************************
-#  * Copyright © 2020-2021, ETH Zurich, D-BSSE, Andreas P. Cuny & Aaron Ponti
-#  * All rights reserved. This program and the accompanying materials
-#  * are made available under the terms of the GNU Public License v3.0
-#  * which accompanies this distribution, and is available at
-#  * http://www.gnu.org/licenses/gpl
-#  *
-#  * Contributors:
-#  *     Andreas P. Cuny - initial API and implementation
-#  *     Aaron Ponti - initial API and implementation
-#  *******************************************************************************/
+#  ********************************************************************************
+#   Copyright © 2020-2021, ETH Zurich, D-BSSE, Andreas P. Cuny & Aaron Ponti
+#   All rights reserved. This program and the accompanying materials
+#   are made available under the terms of the GNU Public License v3.0
+#   which accompanies this distribution, and is available at
+#   http://www.gnu.org/licenses/gpl
+#
+#   Contributors:
+#     * Andreas P. Cuny - initial API and implementation
+#     * Aaron Ponti - initial API and implementation
+#  *********************************************************************************
 from unittest import TestCase, main
 from pypocquant.lib.tools import extract_strip
 from pypocquant.lib.io import load_and_process_image
 import numpy as np
+from pathlib import Path
 
 
 class TestTools(TestCase):
 
     def testExtractStrip(self):
-        full_filename = '../examples/images/IMG_9067.JPG'
+        file_path = Path(__file__).parent.absolute().parent
+        full_filename = str(Path(file_path / 'examples' / 'images' / 'IMG_9067.JPG'))
         image = load_and_process_image(full_filename, raw_auto_stretch=False, raw_auto_wb=False, to_rgb=True)
         strip_for_analysis, error_msg, left_rect, right_rect = extract_strip(image, qr_code_border=40,
                                                                              strip_try_correct_orientation=False,
@@ -31,7 +33,8 @@ class TestTools(TestCase):
         self.assertEquals((300, 1056, 3),  strip_for_analysis.shape)
 
     def testExtractStripTryCorrectOrientation(self):
-        full_filename = '../examples/images/IMG_9067.JPG'
+        file_path = Path(__file__).parent.absolute().parent
+        full_filename = str(Path(file_path / 'examples' / 'images' / 'IMG_9067.JPG'))
         image = load_and_process_image(full_filename, raw_auto_stretch=False, raw_auto_wb=False, to_rgb=True)
         strip_for_analysis, error_msg, left_rect, right_rect = extract_strip(image, qr_code_border=40,
                                                                              strip_try_correct_orientation=True,
