@@ -9,11 +9,11 @@ This repository contains the implementation of the computer vision library *pyPO
 
 
 
-* Cuny, A. P., Rudolf, F., & Ponti, A. (2020). pyPOCQuant - A tool to automatically quantify Point-Of-Care Tests from images. MedRxiv,. https://doi.org/10.1101/2020.11.08.20227470
+* Cuny, A. P., Rudolf, F., & Ponti, A. (2020). pyPOCQuant - A tool to automatically quantify Point-Of-Care Tests from images. SoftwareX,. https://doi.org/10.1016/j.softx.2021.100710
 
 
 
-Please [cite the paper(s)](https://www.medrxiv.org/content/10.1101/2020.11.08.20227470v1) if you are using this code in your research or work.
+Please [cite the paper(s)](https://www.sciencedirect.com/science/article/pii/S2352711021000558?via%3Dihub) if you are using this code in your research or work.
 
 
 ## How to start?
@@ -196,12 +196,19 @@ pyPOCQuant is developed by Andreas P. Cuny and Aaron Ponti. If you want to contr
 
 ## How to cite 
 ```bibtex
-@article{cuny2020,
-  author    = {Andreas P. Cuny and Fabian Rudolf and Aaron Ponti},
-  title     = {A tool to automatically quantify Point-Of-Care Tests from images},
-  journal   = {MedRxiv},
-  year      = {2020},
-  doi       = {10.1101/2020.11.08.20227470}
+@article{Cuny2021,
+abstract = {Lateral flow Point-Of-Care Tests (POCTs) are a valuable tool for rapidly detecting pathogens and the associated immune response in humans and animals. In the context of the SARS-CoV-2 pandemic, they offer rapid on-site diagnostics and can relieve centralized laboratory testing sites, thus freeing resources that can be focused on especially vulnerable groups. However, visual interpretation of the POCT test lines is subjective, error prone and only qualitative. Here we present pyPOCQuant, an open-source tool implemented in Python 3 that can robustly and reproducibly analyze POCTs from digital images and return an unbiased and quantitative measurement of the POCT test lines.},
+author = {Cuny, Andreas P. and Rudolf, Fabian and Ponti, Aaron},
+doi = {10.1016/j.softx.2021.100710},
+issn = {23527110},
+journal = {SoftwareX},
+keywords = {Computer vision,Diagnostics,Lateral flow assay (LFA),Lateral flow immunoassay (LFIA),Point of care test (POCT),QR code,Rapid diagnostic tests (RTD),Rapid testing,Readout zone quantification,Test line quantification},
+pages = {100710},
+publisher = {Elsevier B.V.},
+title = {{pyPOCQuant — A tool to automatically quantify Point-Of-Care Tests from images}},
+url = {https://doi.org/10.1016/j.softx.2021.100710},
+volume = {15},
+year = {2021}
 }
 ```
 
